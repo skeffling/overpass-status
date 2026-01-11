@@ -1468,6 +1468,7 @@
                 <button class="btn btn-icon btn-secondary" id="aboutBtn" title="About">
                     &#9432;
                 </button>
+                <a href="help.html" class="btn btn-icon btn-secondary" title="Help">?</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <span class="theme-toggle-icons">
                         <span>&#9728;</span>
@@ -2224,8 +2225,10 @@
         function trackDataAge(serverUrl, isoTimestamp) {
             if (!isoTimestamp) return;
             const date = new Date(isoTimestamp);
+            if (isNaN(date.getTime())) return; // Invalid date
             const now = new Date();
             const diffMins = Math.floor((now - date) / 60000);
+            if (diffMins < 0 || !isFinite(diffMins)) return; // Invalid diff
 
             if (!state.serverDataAgeHistory[serverUrl]) {
                 state.serverDataAgeHistory[serverUrl] = [];
@@ -2955,6 +2958,7 @@
                 // Also fetch metadata (version, data age) via a simple query
                 if (status.status !== 'error') {
                     await fetchServerMetadata(url);
+                    saveHistory(); // Save data age history
                     renderServerCard(url);
                 }
             });
