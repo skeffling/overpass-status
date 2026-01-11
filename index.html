@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overpass API Status Monitor</title>
+    <title>Overpass API Status Monitor - Real-time OpenStreetMap Server Health</title>
+    <meta name="description" content="Monitor the health and performance of Overpass API servers in real-time. Check server latency, available query slots, data freshness, and run test queries against OpenStreetMap data worldwide.">
+    <meta name="keywords" content="Overpass API, OpenStreetMap, OSM, API status, server monitor, query slots, OSM data, geospatial, mapping API">
+    <meta name="author" content="Overpass Status Monitor">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Overpass API Status Monitor">
+    <meta property="og:description" content="Real-time monitoring of Overpass API servers. Check latency, query slots, and data freshness for OpenStreetMap servers.">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Overpass API Status Monitor">
+    <meta name="twitter:description" content="Real-time monitoring of Overpass API servers for OpenStreetMap data.">
+
+    <link rel="canonical" href="https://overpass-status.example.com/">
     <style>
         /* ========== CSS Reset & Base ========== */
         *, *::before, *::after {
@@ -124,6 +140,70 @@
             margin: 0 auto;
             padding: var(--spacing-md);
             overflow-x: hidden;
+        }
+
+        /* ========== Intro Box ========== */
+        .intro-box {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-md);
+            position: relative;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .intro-box h2 {
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .intro-box p {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            opacity: 0.95;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .intro-box ul {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            opacity: 0.95;
+            margin-left: var(--spacing-lg);
+            margin-top: var(--spacing-xs);
+        }
+
+        .intro-box li {
+            margin-bottom: 2px;
+        }
+
+        .intro-close {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background var(--transition-fast);
+        }
+
+        .intro-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .intro-box.hidden {
+            display: none;
         }
 
         /* ========== Header ========== */
@@ -1164,6 +1244,28 @@
 </head>
 <body>
     <div class="container">
+        <!-- Intro Box for new users -->
+        <article class="intro-box" id="introBox">
+            <button class="intro-close" id="introClose" aria-label="Close introduction">&#10005;</button>
+            <h2>&#128203; Welcome to Overpass API Status Monitor</h2>
+            <p>
+                This tool helps you monitor the health and performance of <strong>Overpass API servers</strong> —
+                the query interface for <strong>OpenStreetMap</strong> data. Whether you're a developer building
+                mapping applications or a researcher analyzing geographic data, this dashboard gives you real-time
+                visibility into server availability.
+            </p>
+            <ul>
+                <li><strong>Server Status</strong> — Check latency, available query slots, and running queries</li>
+                <li><strong>Data Freshness</strong> — See how recently each server's OSM data was updated</li>
+                <li><strong>Landmark Tests</strong> — Verify servers return real data by querying famous locations worldwide</li>
+                <li><strong>Multi-Server Comparison</strong> — Monitor multiple public and self-hosted instances side-by-side</li>
+            </ul>
+            <p style="margin-top: var(--spacing-sm); opacity: 0.8;">
+                Add servers using the button below, or expand Landmark Tests to run queries against iconic places like
+                the Eiffel Tower, Statue of Liberty, and Sydney Opera House.
+            </p>
+        </article>
+
         <!-- Header -->
         <header class="header">
             <div class="header-left">
@@ -1370,6 +1472,7 @@
             theme: 'light',
             autoRefreshInterval: 180000, // 3 minutes default
             landmarksCollapsed: true, // collapsed by default
+            introDismissed: false, // show intro box for new users
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1451,7 +1554,9 @@
             logSection: document.getElementById('logSection'),
             landmarksToggle: document.getElementById('landmarksToggle'),
             landmarksCollapseIcon: document.getElementById('landmarksCollapseIcon'),
-            landmarksSection: document.getElementById('landmarksSection')
+            landmarksSection: document.getElementById('landmarksSection'),
+            introBox: document.getElementById('introBox'),
+            introClose: document.getElementById('introClose')
         };
 
         // ========== Storage ==========
@@ -1460,7 +1565,8 @@
                 servers: state.servers,
                 theme: state.theme,
                 autoRefreshInterval: state.autoRefreshInterval,
-                landmarksCollapsed: state.landmarksCollapsed
+                landmarksCollapsed: state.landmarksCollapsed,
+                introDismissed: state.introDismissed
             }));
         }
 
@@ -1486,6 +1592,7 @@
                     state.theme = data.theme || 'light';
                     state.autoRefreshInterval = data.autoRefreshInterval ?? 180000;
                     state.landmarksCollapsed = data.landmarksCollapsed ?? true; // default collapsed
+                    state.introDismissed = data.introDismissed ?? false; // show for new users
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -1563,6 +1670,12 @@
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksSection.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
+            saveState();
+        }
+
+        function dismissIntro() {
+            state.introDismissed = true;
+            elements.introBox.classList.add('hidden');
             saveState();
         }
 
@@ -2699,6 +2812,7 @@ out count;`;
 
             elements.logToggle.addEventListener('click', toggleLogPane);
             elements.landmarksToggle.addEventListener('click', toggleLandmarks);
+            elements.introClose.addEventListener('click', dismissIntro);
 
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -2725,6 +2839,9 @@ out count;`;
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksSection.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
+
+            // Apply intro box dismissed state
+            elements.introBox.classList.toggle('hidden', state.introDismissed);
 
             renderServers();
             renderLandmarks();
