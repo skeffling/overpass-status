@@ -3395,10 +3395,10 @@ out count;`;
                         ${cols.version ? `<div class="metric" title="${formatVersionTooltip(versionInfo, url)}">
                             <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>` : ''}
-                        ${state.showGraphs && cols.latency ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="latency" title="Latency history (hover for details)">
+                        ${state.showGraphs && cols.latency ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="latency">
                             ${getLatencySparkline(url, 80, 20)}
                         </div>` : ''}
-                        ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active" title="Active queries history (hover for details)">
+                        ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
