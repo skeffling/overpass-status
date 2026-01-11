@@ -237,6 +237,12 @@
         .section-actions {
             display: flex;
             gap: var(--spacing-sm);
+            transition: opacity var(--transition-fast);
+        }
+
+        .section.collapsed .section-actions {
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* ========== Buttons ========== */
@@ -1210,7 +1216,7 @@
         </section>
 
         <!-- Landmark Tests Section -->
-        <section class="section">
+        <section class="section collapsed" id="landmarksSection">
             <div class="section-header section-header-clickable" id="landmarksToggle">
                 <h2 class="section-title">
                     <span class="collapse-icon" id="landmarksCollapseIcon">&#9654;</span>
@@ -1231,7 +1237,7 @@
         </section>
 
         <!-- Log Pane Section -->
-        <section class="section">
+        <section class="section collapsed" id="logSection">
             <div class="section-header section-header-clickable" id="logToggle">
                 <h2 class="section-title">
                     <span class="collapse-icon" id="logCollapseIcon">&#9654;</span>
@@ -1433,8 +1439,10 @@
             logToggle: document.getElementById('logToggle'),
             logPane: document.getElementById('logPane'),
             logCollapseIcon: document.getElementById('logCollapseIcon'),
+            logSection: document.getElementById('logSection'),
             landmarksToggle: document.getElementById('landmarksToggle'),
-            landmarksCollapseIcon: document.getElementById('landmarksCollapseIcon')
+            landmarksCollapseIcon: document.getElementById('landmarksCollapseIcon'),
+            landmarksSection: document.getElementById('landmarksSection')
         };
 
         // ========== Storage ==========
@@ -1537,12 +1545,14 @@
         function toggleLogPane() {
             const isCollapsed = elements.logPane.classList.contains('collapsed');
             elements.logPane.classList.toggle('collapsed');
+            elements.logSection.classList.toggle('collapsed', !isCollapsed);
             elements.logCollapseIcon.classList.toggle('expanded', isCollapsed);
         }
 
         function toggleLandmarks() {
             state.landmarksCollapsed = !state.landmarksCollapsed;
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
+            elements.landmarksSection.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
             saveState();
         }
@@ -2590,6 +2600,7 @@ out count;`;
 
             // Apply landmarks collapsed state
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
+            elements.landmarksSection.classList.toggle('collapsed', state.landmarksCollapsed);
             elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
 
             renderServers();
