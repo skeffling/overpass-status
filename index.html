@@ -3226,29 +3226,29 @@ out count;`;
                         </div>
                     </div>
                     <div class="card-metrics">
-                        <div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
+                        ${state.visibleColumns.latency ? `<div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
                             <div class="metric-label">Latency</div>
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
                             ${state.showGraphs ? `<div class="sparkline-card">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
-                        </div>
-                        <div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
+                        </div>` : ''}
+                        ${state.visibleColumns.slots ? `<div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
                             <div class="metric-label">Slots</div>
                             <div class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</div>
                             ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : ''}
-                        </div>
-                        <div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
+                        </div>` : ''}
+                        ${state.visibleColumns.active ? `<div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
                             <div class="metric-label">Active</div>
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
                             ${state.showGraphs ? `<div class="sparkline-card">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
-                        </div>
-                        <div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                        </div>` : ''}
+                        ${state.visibleColumns.dataAge ? `<div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <div class="metric-label">Data Age</div>
                             <div class="metric-value">${dataAge?.text || '--'}</div>
-                        </div>
-                        <div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
+                        </div>` : ''}
+                        ${state.visibleColumns.version ? `<div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
                             <div class="metric-label">Version</div>
                             <div class="metric-value">${versionInfo ? versionInfo.version : '--'}${versionInfo?.commit ? ` <span class="version-commit">${versionInfo.commit.substring(0, 7)}</span>` : ''}</div>
-                        </div>
+                        </div>` : ''}
                     </div>
                 `;
             }
