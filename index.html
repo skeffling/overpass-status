@@ -3561,7 +3561,7 @@ out count;`;
                 el.innerHTML = `
                     <div class="server-name-col">
                         <div class="server-name">${serverName}</div>
-                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" ${endpointCount > 1 ? `title="Click to see all ${endpointCount} detected endpoints" onclick="showEndpointsModal('${url}')" style="cursor: pointer;"` : `title="Backend server handling this request"`}>→ ${endpoint}${endpointCount > 1 ? ' <span class="endpoint-warning" title="Multiple backends detected - click to add individually">&#9888;</span>' : ''}</span>` : ''}</div>
+                        <div class="server-hostname">${displayUrl}</div>
                     </div>
                     <div class="server-metrics">
                         ${cols.latency ? `<div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
