@@ -2304,9 +2304,20 @@
                 elements.graphPopupMax.textContent = Math.ceil(max / 1000) + 's';
                 elements.graphPopupMin.textContent = '0s';
             } else if (type === 'dataAge') {
-                // Show in minutes
-                elements.graphPopupMax.textContent = max + 'm';
-                elements.graphPopupMin.textContent = '0m';
+                // Adapt units based on max value (in minutes)
+                let maxLabel, minLabel;
+                if (max >= 1440) { // >= 1 day
+                    maxLabel = (max / 1440).toFixed(1).replace(/\.0$/, '') + 'd';
+                    minLabel = '0d';
+                } else if (max >= 60) { // >= 1 hour
+                    maxLabel = (max / 60).toFixed(1).replace(/\.0$/, '') + 'h';
+                    minLabel = '0h';
+                } else {
+                    maxLabel = max + 'm';
+                    minLabel = '0m';
+                }
+                elements.graphPopupMax.textContent = maxLabel;
+                elements.graphPopupMin.textContent = minLabel;
             } else {
                 elements.graphPopupMax.textContent = max;
                 elements.graphPopupMin.textContent = '0';
