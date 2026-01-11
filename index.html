@@ -1389,7 +1389,6 @@
             <div class="section-header section-header-clickable" id="landmarksToggle">
                 <h2 class="section-title">
                     <span class="collapse-icon" id="landmarksCollapseIcon">&#9654;</span>
-                    <span>&#127757;</span>
                     <span>Landmark Tests</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(click cards to test)</span>
                 </h2>
@@ -1410,7 +1409,6 @@
             <div class="section-header section-header-clickable" id="logToggle">
                 <h2 class="section-title">
                     <span class="collapse-icon" id="logCollapseIcon">&#9654;</span>
-                    <span>&#128220;</span>
                     <span>API Log</span>
                     <span class="log-badge" id="logCount">0</span>
                 </h2>
@@ -2841,7 +2839,6 @@ out count;`;
                 card.innerHTML = `
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
-                            <span class="server-url-icon">&#128421;</span>
                             <span class="server-name">${serverName}</span>
                             <span class="server-hostname">${displayUrl}</span>
                         </div>
@@ -2880,7 +2877,6 @@ out count;`;
             card.innerHTML = `
                 <div class="server-card-header">
                     <div class="server-url" title="${displayUrl}">
-                        <span class="server-url-icon">&#128421;</span>
                         <span class="server-name">${serverName}</span>
                         <span class="server-hostname">${displayUrl}</span>
                         ${status.endpoint && status.endpoint !== '(none)' && status.endpoint !== 'none' ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
@@ -2992,7 +2988,6 @@ out count;`;
 
             card.innerHTML = showResultsInline ? `
                 <div class="landmark-header">
-                    <div class="landmark-icon">${landmark.icon}</div>
                     <div class="landmark-info">
                         <div class="landmark-name">${landmark.name}</div>
                         <div class="landmark-location">${landmark.location}</div>
@@ -3003,7 +2998,6 @@ out count;`;
                 </div>
             ` : `
                 <div class="landmark-header">
-                    <div class="landmark-icon">${landmark.icon}</div>
                     <div class="landmark-info">
                         <div class="landmark-name">${landmark.name}</div>
                         <div class="landmark-location">${landmark.location}</div>
