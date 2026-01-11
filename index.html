@@ -1651,6 +1651,25 @@
             });
         }
 
+        function formatDataAgeTooltip(isoTimestamp) {
+            if (!isoTimestamp) {
+                return 'How recently the OSM data was updated\nRun a query to check';
+            }
+            const date = new Date(isoTimestamp);
+            return `How recently the OSM data was updated\nLast update: ${date.toLocaleString()}`;
+        }
+
+        function formatVersionTooltip(versionInfo) {
+            if (!versionInfo) {
+                return 'Overpass API software version\nRun a query to check';
+            }
+            let tooltip = `Overpass API software version\n${versionInfo.full}`;
+            if (versionInfo.commit) {
+                tooltip += `\nCommit: ${versionInfo.commit}`;
+            }
+            return tooltip;
+        }
+
         function parseGenerator(generator) {
             // Parse "Overpass API 0.7.62.8 e802775f" into structured data
             const match = generator.match(/Overpass API ([\d.]+)\s*(\w+)?/);
@@ -2351,7 +2370,7 @@ out count;`;
                     </div>
                 </div>
                 <div class="server-metrics">
-                    <div class="metric-card ${statusClass}">
+                    <div class="metric-card ${statusClass}" title="Response time to the status endpoint">
                         <div class="metric-label">Latency</div>
                         <div class="metric-value ${status.status}">
                             ${isLoading ? '<span class="loading"></span>' :
@@ -2365,15 +2384,15 @@ out count;`;
                         </div>
                         ${formatNextSlotDetail(status, url)}
                     </div>
-                    <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}">
+                    <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}">
                         <div class="metric-label">Active</div>
                         <div class="metric-value ${runningStatus}">${runningCount}</div>
                     </div>
-                    <div class="metric-card ${dataAgeStatus ? 'status-' + dataAgeStatus : ''}" title="${state.serverDataAge[url] || 'Run a landmark test to check data age'}">
+                    <div class="metric-card ${dataAgeStatus ? 'status-' + dataAgeStatus : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                         <div class="metric-label">Data Age</div>
                         <div class="metric-value ${dataAgeStatus}">${dataAge?.text || '--'}</div>
                     </div>
-                    <div class="metric-card" title="${versionInfo?.full || 'Run a landmark test to check version'}">
+                    <div class="metric-card" title="${formatVersionTooltip(versionInfo)}">
                         <div class="metric-label">Version</div>
                         <div class="metric-value version-value">${versionInfo ? versionInfo.version : '--'}</div>
                         ${versionInfo?.commit ? `<div class="metric-detail commit-hash">${versionInfo.commit}</div>` : ''}
