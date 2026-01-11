@@ -143,13 +143,13 @@
 
         /* ========== Intro Box ========== */
         .intro-box {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: var(--spacing-lg);
             border-radius: var(--radius-lg);
             margin-bottom: var(--spacing-md);
             position: relative;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            border: 1px solid var(--border-color);
         }
 
         .intro-box h2 {
@@ -183,9 +183,9 @@
             position: absolute;
             top: var(--spacing-sm);
             right: var(--spacing-sm);
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -198,7 +198,8 @@
         }
 
         .intro-close:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
         }
 
         .intro-box.hidden {
@@ -1359,30 +1360,25 @@
             <button class="intro-close" id="introClose" aria-label="Close introduction">&#10005;</button>
             <h2>&#128203; Welcome to Overpass API Status Monitor</h2>
             <p>
-                This tool helps you monitor the health and performance of <strong>Overpass API servers</strong> —
-                the query interface for <strong>OpenStreetMap</strong> data. Whether you're a developer building
-                mapping applications or a researcher analyzing geographic data, this dashboard gives you real-time
-                visibility into server availability. Use it to monitor <strong>public Overpass servers</strong> like
-                overpass-api.de, or add your own <strong>self-hosted instances</strong> to keep an eye on your infrastructure.
+                Monitor the health and performance of <strong>Overpass API servers</strong> —
+                the query interface for <strong>OpenStreetMap</strong> data. Track <strong>public servers</strong> like
+                overpass-api.de, or add your own <strong>self-hosted instances</strong>.
             </p>
-            <p style="margin-top: var(--spacing-sm);"><strong>What we monitor for each server:</strong></p>
+            <p style="margin-top: var(--spacing-sm);"><strong>Features:</strong></p>
             <ul>
-                <li><strong>Latency</strong> — Response time to the status endpoint</li>
-                <li><strong>Query Slots</strong> — Available capacity for new queries (rate limiting)</li>
-                <li><strong>Active Queries</strong> — Currently running queries on the server</li>
-                <li><strong>Data Age</strong> — How recently the server's OSM data was updated</li>
-                <li><strong>Version</strong> — Overpass API software version and git commit</li>
+                <li><strong>Two layouts</strong> — Card view for detailed info, Table view for compact monitoring</li>
+                <li><strong>Customizable columns</strong> — Show/hide metrics (Latency, Slots, Active, Data Age, Version)</li>
+                <li><strong>Live graphs</strong> — Enable sparkline graphs to visualize latency and activity trends</li>
+                <li><strong>Persistent history</strong> — Graphs build up over time, even across page reloads</li>
+                <li><strong>Shareable config</strong> — Share your setup via URL (see About for link)</li>
+                <li><strong>Drag to reorder</strong> — Arrange servers in custom order (Sort: Custom)</li>
             </ul>
-            <p style="margin-top: var(--spacing-sm);"><strong>Color coding at a glance:</strong></p>
+            <p style="margin-top: var(--spacing-sm);"><strong>Color coding:</strong></p>
             <ul>
-                <li><span style="color: #4ade80;">&#9679; Green</span> — Healthy (fast latency, slots available, fresh data, latest version)</li>
-                <li><span style="color: #fbbf24;">&#9679; Orange</span> — Warning (moderate latency, some slots in use, slightly stale data, older version)</li>
-                <li><span style="color: #f87171;">&#9679; Red</span> — Issue (slow latency, no slots available, stale data)</li>
+                <li><span style="color: #4ade80;">&#9679; Green</span> — Healthy</li>
+                <li><span style="color: #fbbf24;">&#9679; Orange</span> — Warning</li>
+                <li><span style="color: #f87171;">&#9679; Red</span> — Issue</li>
             </ul>
-            <p style="margin-top: var(--spacing-sm); opacity: 0.8;">
-                Add servers using the button below, or expand Landmark Tests to run queries against iconic places like
-                the Eiffel Tower, Statue of Liberty, and Sydney Opera House.
-            </p>
             <p style="margin-top: var(--spacing-sm); font-size: 0.75rem; opacity: 0.7;">
                 This tool is not affiliated with OpenStreetMap or any Overpass API server operators.
             </p>
