@@ -336,6 +336,12 @@
             font-size: 1rem;
         }
 
+        .server-endpoint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
         .server-error {
             display: flex;
             align-items: center;
@@ -1291,30 +1297,26 @@
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), CONFIG.statusTimeout);
 
-                // Fetch both status and timestamp in parallel
-                const [statusResponse, timestampResponse] = await Promise.all([
-                    fetch(statusUrl, { signal: controller.signal }),
-                    fetch(timestampUrl, { signal: controller.signal }).catch(() => null)
-                ]);
+                // Fetch status first
+                const statusResponse = await fetch(statusUrl, { signal: controller.signal });
                 clearTimeout(timeout);
 
                 const latency = Math.round(performance.now() - startTime);
                 const statusText = await statusResponse.text();
 
-                // Get data timestamp if available
+                // Try to get data timestamp separately (may fail due to CORS)
                 let dataTimestamp = null;
-                if (timestampResponse && timestampResponse.ok) {
-                    const timestampText = await timestampResponse.text();
-                    dataTimestamp = timestampText.trim();
-                    // Log timestamp fetch
-                    addLog({
-                        timestamp: new Date(),
-                        method: 'GET',
-                        url: timestampUrl,
-                        status: timestampResponse.status,
-                        latency: latency,
-                        responseBody: timestampText
-                    });
+                try {
+                    const tsController = new AbortController();
+                    const tsTimeout = setTimeout(() => tsController.abort(), 5000);
+                    const timestampResponse = await fetch(timestampUrl, { signal: tsController.signal });
+                    clearTimeout(tsTimeout);
+                    if (timestampResponse.ok) {
+                        const timestampText = await timestampResponse.text();
+                        dataTimestamp = timestampText.trim();
+                    }
+                } catch (e) {
+                    // Timestamp endpoint may not support CORS, that's ok
                 }
 
                 // Add status to log
@@ -1360,8 +1362,11 @@
                 rateLimit: null,
                 slotsAvailable: null,
                 slotsTotal: null,
-                runningQueries: []
+                runningQueries: [],
+                slotsUsed: 0
             };
+
+            let inRunningQueries = false;
 
             for (const line of lines) {
                 if (line.startsWith('Connected as:')) {
@@ -1375,7 +1380,29 @@
                     result.slotsTotal = result.rateLimit;
                 } else if (line.includes('slots available')) {
                     result.slotsAvailable = parseInt(line.match(/(\d+) slots/)?.[1] || '0');
+                } else if (line.startsWith('Currently running queries')) {
+                    inRunningQueries = true;
+                } else if (inRunningQueries && line.trim()) {
+                    // Parse running query line (pid, space limit, time limit, start time)
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length >= 4) {
+                        result.runningQueries.push({
+                            pid: parts[0],
+                            spaceLimit: parts[1],
+                            timeLimit: parts[2],
+                            startTime: parts.slice(3).join(' ')
+                        });
+                    }
+                } else if (line.includes('Slot available after')) {
+                    // Count slots that are in cooldown
+                    result.slotsUsed++;
                 }
+            }
+
+            // Calculate slots in use
+            result.slotsUsed = Math.max(result.slotsUsed, result.runningQueries.length);
+            if (result.slotsTotal && result.slotsAvailable !== null) {
+                result.slotsUsed = result.slotsTotal - result.slotsAvailable;
             }
 
             // Determine overall status
@@ -1616,11 +1643,16 @@ out count;`;
                 return;
             }
 
+            // Running queries status
+            const runningCount = status.runningQueries?.length || 0;
+            const runningStatus = runningCount === 0 ? 'ok' : runningCount < 3 ? 'warning' : 'error';
+
             card.innerHTML = `
                 <div class="server-card-header">
                     <div class="server-url">
                         <span class="server-url-icon">&#128421;</span>
                         <span>${displayUrl}</span>
+                        ${status.endpoint ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
                     </div>
                     <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
                         &#10005;
@@ -1628,27 +1660,31 @@ out count;`;
                 </div>
                 <div class="server-metrics">
                     <div class="metric-card ${statusClass}">
-                        <div class="metric-label">Status</div>
+                        <div class="metric-label">Latency</div>
                         <div class="metric-value ${status.status}">
                             ${isLoading ? '<span class="loading"></span>' :
-                              status.status === 'ok' ? '&#10003;' :
-                              status.status === 'warning' ? '&#9888;' : '--'}
+                              status.latency ? status.latency : '--'}
                         </div>
                         <div class="metric-detail">
-                            ${status.latency ? `${status.latency}ms` : 'Checking...'}
+                            ${isLoading ? 'Checking...' : status.status === 'ok' ? 'ms' : ''}
                         </div>
                     </div>
-                    <div class="metric-card ${dataStatus ? `status-${dataStatus === 'ok' ? 'ok' : dataStatus === 'warning' ? 'warning' : 'error'}` : ''}">
-                        <div class="metric-label">Data</div>
+                    <div class="metric-card ${dataStatus ? `status-${dataStatus}` : ''}">
+                        <div class="metric-label">Data Age</div>
                         <div class="metric-value ${dataStatus}">${dataLag}</div>
-                        <div class="metric-detail">${dataStatus === 'ok' ? 'Fresh' : dataStatus === 'warning' ? 'Stale' : dataStatus === 'error' ? 'Very stale' : 'Unknown'}</div>
+                        <div class="metric-detail">${status.dataTimestamp ? new Date(status.dataTimestamp).toLocaleTimeString() : 'N/A'}</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Capacity</div>
-                        <div class="metric-value ${status.slotsAvailable === 0 ? 'error' : status.slotsAvailable && status.slotsAvailable < status.slotsTotal ? 'warning' : 'ok'}">
-                            ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || status.rateLimit || '?'}` : '--'}
+                    <div class="metric-card ${status.slotsAvailable === 0 ? 'status-error' : status.slotsAvailable < status.slotsTotal ? 'status-warning' : ''}">
+                        <div class="metric-label">Slots</div>
+                        <div class="metric-value ${status.slotsAvailable === 0 ? 'error' : 'ok'}">
+                            ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
-                        <div class="metric-detail">slots available</div>
+                        <div class="metric-detail">available</div>
+                    </div>
+                    <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}">
+                        <div class="metric-label">Active</div>
+                        <div class="metric-value ${runningStatus}">${runningCount}</div>
+                        <div class="metric-detail">queries</div>
                     </div>
                 </div>
             `;
