@@ -543,6 +543,23 @@
             color: var(--text-muted);
         }
 
+        .sparkline {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .sparkline-card {
+            margin-top: 4px;
+        }
+
+        .sparkline-table {
+            min-width: 80px;
+        }
+
+        .metric-graph {
+            min-width: 80px;
+        }
+
         .server-actions {
             display: flex;
             align-items: center;
@@ -1266,6 +1283,7 @@
             animation: pulse 2s ease-in-out infinite;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/gh/mitjafelicijan/sparklines/sparklines.min.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -1333,6 +1351,10 @@
                     <select class="refresh-select" id="layoutSelect" title="Layout style">
                         <option value="card">Layout: Card</option>
                         <option value="table">Layout: Table</option>
+                    </select>
+                    <select class="refresh-select" id="graphsSelect" title="Show latency graphs">
+                        <option value="off">Graphs: Off</option>
+                        <option value="on">Graphs: On</option>
                     </select>
                     <select class="refresh-select" id="serverSortSelect" title="Sort servers by">
                         <option value="custom">Sort: Custom</option>
@@ -1537,6 +1559,7 @@
             introDismissed: false, // show intro box for new users
             serverSortOrder: 'custom', // custom, name, latency, version
             serverLayout: 'card', // card or table
+            showGraphs: false, // show latency sparkline graphs
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1598,6 +1621,7 @@
             autoRefreshSelect: document.getElementById('autoRefreshSelect'),
             serverSortSelect: document.getElementById('serverSortSelect'),
             layoutSelect: document.getElementById('layoutSelect'),
+            graphsSelect: document.getElementById('graphsSelect'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -1645,7 +1669,8 @@
                 landmarksCollapsed: state.landmarksCollapsed,
                 introDismissed: state.introDismissed,
                 serverSortOrder: state.serverSortOrder,
-                serverLayout: state.serverLayout
+                serverLayout: state.serverLayout,
+                showGraphs: state.showGraphs
             }));
         }
 
@@ -1674,6 +1699,7 @@
                     state.introDismissed = data.introDismissed ?? false; // show for new users
                     state.serverSortOrder = data.serverSortOrder ?? 'custom';
                     state.serverLayout = data.serverLayout ?? 'card';
+                    state.showGraphs = data.showGraphs ?? false;
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -1847,6 +1873,13 @@
             if (!history || history.length < 5) return null;
             const sum = history.reduce((a, b) => a + b, 0);
             return Math.round(sum / history.length);
+        }
+
+        function getLatencySparkline(serverUrl, width = 80, height = 20) {
+            const history = state.serverLatencyHistory[serverUrl];
+            if (!history || history.length < 2) return '';
+            const points = history.join(',');
+            return `<div class="sparkline" data-sparkline="true" data-points="${points}" data-width="${width}" data-height="${height}" data-type="line" data-stroke-width="1" data-colors="${getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim()}"></div>`;
         }
 
         function getAverageSlots(serverUrl) {
@@ -2785,6 +2818,15 @@ out count;`;
             getSortedServers().forEach(server => {
                 renderServerCard(server.url);
             });
+
+            // Initialize sparklines after rendering
+            if (state.showGraphs && typeof window.sparklines !== 'undefined') {
+                setTimeout(() => {
+                    document.querySelectorAll('[data-sparkline="true"]').forEach(el => {
+                        el.dispatchEvent(new Event('update'));
+                    });
+                }, 10);
+            }
         }
 
         function applyCompactMode() {
@@ -2919,6 +2961,10 @@ out count;`;
                             <span class="metric-label">Version</span>
                             <span class="metric-value">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>
+                        ${state.showGraphs ? `<div class="metric metric-graph" title="Latency history">
+                            <span class="metric-label">Graph</span>
+                            ${getLatencySparkline(url, 80, 20)}
+                        </div>` : ''}
                     </div>
                     <div class="server-actions">
                         <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
@@ -2943,7 +2989,7 @@ out count;`;
                         <div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
                             <div class="metric-label">Latency</div>
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
-                            ${getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : ''}
+                            ${state.showGraphs ? `<div class="sparkline-card">${getLatencySparkline(url, 60, 18)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
                         </div>
                         <div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
                             <div class="metric-label">Slots</div>
@@ -3126,6 +3172,12 @@ out count;`;
                 applyCompactMode();
             });
 
+            elements.graphsSelect.addEventListener('change', (e) => {
+                state.showGraphs = e.target.value === 'on';
+                saveState();
+                renderServers();
+            });
+
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
             elements.closeModalBtn.addEventListener('click', closeModal);
@@ -3219,6 +3271,7 @@ out count;`;
             elements.autoRefreshSelect.value = state.autoRefreshInterval;
             elements.serverSortSelect.value = state.serverSortOrder;
             elements.layoutSelect.value = state.serverLayout;
+            elements.graphsSelect.value = state.showGraphs ? 'on' : 'off';
 
             // Apply landmarks collapsed state
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
