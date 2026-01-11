@@ -2201,6 +2201,14 @@
             return createSparklineSVG(recentHistory, width, height, responsive);
         }
 
+        function getSlotsSparkline(serverUrl, width = 80, height = 20, responsive = false) {
+            const history = state.serverSlotsHistory[serverUrl];
+            if (!history || history.length < 2) return '';
+            // Show only last 20 points for on-screen sparklines
+            const recentHistory = history.slice(-20);
+            return createSparklineSVG(recentHistory, width, height, responsive);
+        }
+
         function getAverageSlots(serverUrl) {
             const history = state.serverSlotsHistory[serverUrl];
             if (!history || history.length < 5) return null;
@@ -2241,13 +2249,26 @@
         }
 
         function showGraphPopup(event, serverUrl, type) {
-            const history = type === 'latency' ? state.serverLatencyHistory[serverUrl] : state.serverActiveHistory[serverUrl];
+            let history;
+            if (type === 'latency') {
+                history = state.serverLatencyHistory[serverUrl];
+            } else if (type === 'active') {
+                history = state.serverActiveHistory[serverUrl];
+            } else if (type === 'slots') {
+                history = state.serverSlotsHistory[serverUrl];
+            }
             if (!history || history.length < 2) return;
 
             const timestamps = state.serverHistoryTimestamps[serverUrl];
             const max = Math.max(...history);
 
-            elements.graphPopupTitle.textContent = type === 'latency' ? 'Latency History' : 'Active Queries History';
+            const titles = {
+                latency: 'Latency History',
+                active: 'Active Queries History',
+                slots: 'Available Slots History'
+            };
+            elements.graphPopupTitle.textContent = titles[type] || 'History';
+
             if (type === 'latency') {
                 // Convert ms to whole seconds, round up for max
                 elements.graphPopupMax.textContent = Math.ceil(max / 1000) + 's';
@@ -3409,6 +3430,9 @@ out count;`;
                         ${state.showGraphs && cols.latency ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="latency">
                             ${getLatencySparkline(url, 80, 20)}
                         </div>` : ''}
+                        ${state.showGraphs && cols.slots && getSlotsSparkline(url) ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="slots">
+                            ${getSlotsSparkline(url, 80, 20)}
+                        </div>` : ''}
                         ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
@@ -3438,10 +3462,10 @@ out count;`;
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
                             ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="latency">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
                         </div>` : ''}
-                        ${state.visibleColumns.slots ? `<div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
+                        ${state.visibleColumns.slots ? `<div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" ${!state.showGraphs || !getSlotsSparkline(url) ? `title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}"` : ''}>
                             <div class="metric-label">Slots</div>
                             <div class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</div>
-                            ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : ''}
+                            ${state.showGraphs && getSlotsSparkline(url) ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="slots">${getSlotsSparkline(url, 100, 18, true)}</div>` : (getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : '')}
                         </div>` : ''}
                         ${state.visibleColumns.active ? `<div class="metric-card status-${runningStatus}" ${!state.showGraphs ? `title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}"` : ''}>
                             <div class="metric-label">Active</div>
