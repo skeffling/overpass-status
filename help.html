@@ -568,6 +568,7 @@
                 <tr><th>Option</th><th>Description</th></tr>
                 <tr><td><code>servers</code></td><td>Array of default servers for new visitors</td></tr>
                 <tr><td><code>minRefresh</code></td><td>Minimum refresh interval in seconds (restricts dropdown options)</td></tr>
+                <tr><td><code>allowCustomServers</code></td><td>Set to <code>false</code> to prevent users from adding their own servers</td></tr>
             </table>
             <h3>Example</h3>
             <pre><code>{
@@ -575,12 +576,13 @@
     { "name": "My Server", "url": "https://overpass.example.com" },
     { "name": "Backup", "url": "https://overpass2.example.com" }
   ],
-  "minRefresh": 180
+  "minRefresh": 180,
+  "allowCustomServers": false
 }</code></pre>
             <p>Copy <code>config.example.json</code> to <code>config.json</code> and edit as needed.</p>
             <div class="note">
-                <div class="note-title">Note</div>
-                Default servers only apply to new visitors. Once a user modifies their server list, their preferences are saved locally. The <code>minRefresh</code> setting always applies to prevent excessive load on your servers.
+                <div class="note-title">Site Restrictions</div>
+                The site operator may restrict certain features. When restrictions are active, they are displayed in the About modal. Default servers only apply to new visitors, but <code>minRefresh</code> and <code>allowCustomServers</code> settings always apply to all users.
             </div>
         </main>
     </div>

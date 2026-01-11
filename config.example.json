@@ -10,5 +10,9 @@
 
   "_comment4": "minRefresh: minimum refresh interval in seconds (0, 60, 120, 180, 300, 600, 1800, 3600)",
   "_comment5": "Set this to limit load on your servers - users cannot select faster intervals",
-  "minRefresh": 180
+  "minRefresh": 180,
+
+  "_comment6": "allowCustomServers: set to false to prevent users from adding their own servers",
+  "_comment7": "When false, users can only monitor the servers you define above",
+  "allowCustomServers": true
 }

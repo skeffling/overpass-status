@@ -1605,7 +1605,13 @@
                 <h4>How It Works</h4>
                 <p>This tool runs entirely in your browser - no backend server required. It makes direct API calls to Overpass servers and displays the results. Your server list and preferences are saved locally in your browser.</p>
 
-                <h4>Self-Hosted Servers</h4>
+                <div id="siteRestrictionsInfo" style="display: none; background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin: 1rem 0; border: 1px solid var(--border-color);">
+                    <h4 style="margin-top: 0;">Site Configuration</h4>
+                    <p style="margin-bottom: 0.5rem;">The operator of this site has configured the following restrictions:</p>
+                    <ul id="siteRestrictionsList" style="margin: 0.5rem 0 0 1.5rem;"></ul>
+                </div>
+
+                <h4 id="selfHostedHeader">Self-Hosted Servers</h4>
                 <p>If using your own Overpass instance, ensure CORS headers are configured:</p>
                 <code>Access-Control-Allow-Origin: *</code>
 
@@ -1802,6 +1808,9 @@
             aboutBtn: document.getElementById('aboutBtn'),
             aboutModal: document.getElementById('aboutModal'),
             closeAboutBtn: document.getElementById('closeAboutBtn'),
+            siteRestrictionsInfo: document.getElementById('siteRestrictionsInfo'),
+            siteRestrictionsList: document.getElementById('siteRestrictionsList'),
+            selfHostedHeader: document.getElementById('selfHostedHeader'),
             exportConfigBtn: document.getElementById('exportConfigBtn'),
             importConfigBtn: document.getElementById('importConfigBtn'),
             importConfigFile: document.getElementById('importConfigFile'),
@@ -3876,6 +3885,7 @@ out count;`;
 
         // ========== Server Config ==========
         let minRefreshInterval = 0; // Minimum refresh interval from config (in ms)
+        let allowCustomServers = true; // Whether users can add custom servers
 
         async function loadServerConfig() {
             try {
@@ -3897,6 +3907,12 @@ out count;`;
                 if (config.minRefresh && typeof config.minRefresh === 'number') {
                     minRefreshInterval = config.minRefresh * 1000; // Convert to ms
                     applyMinRefresh();
+                }
+
+                // Apply allowCustomServers setting
+                if (config.allowCustomServers === false) {
+                    allowCustomServers = false;
+                    applyCustomServerRestriction();
                 }
             } catch (e) {
                 // Config file doesn't exist or is invalid - that's fine
@@ -3921,6 +3937,36 @@ out count;`;
                 elements.autoRefreshSelect.value = minRefreshInterval;
                 saveState();
                 startAutoRefresh();
+            }
+
+            // Show restriction info
+            showSiteRestriction(`Minimum refresh interval: ${minRefreshInterval / 1000} seconds`);
+        }
+
+        function applyCustomServerRestriction() {
+            // Hide Add Server buttons
+            if (elements.addServerBtn) elements.addServerBtn.style.display = 'none';
+            if (elements.addServerBtnEmpty) elements.addServerBtnEmpty.style.display = 'none';
+
+            // Hide self-hosted section in About (not relevant if can't add servers)
+            if (elements.selfHostedHeader) {
+                elements.selfHostedHeader.style.display = 'none';
+                elements.selfHostedHeader.nextElementSibling.style.display = 'none'; // <p>
+                elements.selfHostedHeader.nextElementSibling.nextElementSibling.style.display = 'none'; // <code>
+            }
+
+            // Show restriction info
+            showSiteRestriction('Adding custom servers is disabled');
+        }
+
+        function showSiteRestriction(message) {
+            if (elements.siteRestrictionsInfo) {
+                elements.siteRestrictionsInfo.style.display = 'block';
+            }
+            if (elements.siteRestrictionsList) {
+                const li = document.createElement('li');
+                li.textContent = message;
+                elements.siteRestrictionsList.appendChild(li);
             }
         }
 
