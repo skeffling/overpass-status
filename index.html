@@ -765,10 +765,19 @@
             border-radius: var(--radius-lg);
             padding: var(--spacing-xl);
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
             box-shadow: 0 20px 60px var(--shadow-color);
             transform: scale(0.9) translateY(20px);
             transition: transform var(--transition-normal);
+        }
+
+        @media (max-height: 600px) {
+            .modal {
+                max-height: 90vh;
+                padding: var(--spacing-md);
+            }
         }
 
         .modal-overlay.active .modal {
