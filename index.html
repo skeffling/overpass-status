@@ -3427,7 +3427,7 @@ out count;`;
                         </div>
                     </div>
                     <div class="card-metrics">
-                        ${state.visibleColumns.latency ? `<div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
+                        ${state.visibleColumns.latency ? `<div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" ${!state.showGraphs ? `title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}"` : ''}>
                             <div class="metric-label">Latency</div>
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
                             ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="latency">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
@@ -3437,7 +3437,7 @@ out count;`;
                             <div class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</div>
                             ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : ''}
                         </div>` : ''}
-                        ${state.visibleColumns.active ? `<div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
+                        ${state.visibleColumns.active ? `<div class="metric-card status-${runningStatus}" ${!state.showGraphs ? `title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}"` : ''}>
                             <div class="metric-label">Active</div>
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
                             ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="active">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
