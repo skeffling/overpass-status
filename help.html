@@ -509,7 +509,13 @@
                 <tr><td><code>graphs</code></td><td><code>on</code>, <code>off</code></td><td><code>?graphs=on</code></td></tr>
                 <tr><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td><code>?theme=dark</code></td></tr>
             </table>
-            <p>Combine parameters: <code>?servers=Main,Z&amp;layout=table&amp;graphs=on</code></p>
+            <h3>Example URLs</h3>
+            <ul>
+                <li><code>?servers=Main,Z,LZ4</code> &mdash; Monitor the three main overpass-api.de servers</li>
+                <li><code>?servers=Main&amp;layout=table&amp;refresh=60</code> &mdash; Single server in compact table view, refreshing every minute</li>
+                <li><code>?servers=Main,Kumi,Japan&amp;graphs=on&amp;theme=dark</code> &mdash; Three servers with graphs enabled in dark mode</li>
+                <li><code>?servers=Main,Z&amp;sort=latency&amp;graphs=on</code> &mdash; Two servers sorted by fastest response, with graphs</li>
+            </ul>
 
             <h2 id="preset-servers">Preset Servers</h2>
             <table>
