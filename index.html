@@ -3720,44 +3720,49 @@ out count;`;
             elements.landmarksToggle.addEventListener('click', toggleLandmarks);
             elements.introClose.addEventListener('click', dismissIntro);
 
-            // Sparkline hover events (using event delegation)
-            document.addEventListener('mouseenter', (e) => {
+            // Sparkline hover events (using event delegation with mouseover/mouseout)
+            let currentSparkline = null;
+
+            document.addEventListener('mouseover', (e) => {
                 const sparkline = e.target.closest('.sparkline-hover');
-                if (sparkline) {
+                if (sparkline && sparkline !== currentSparkline) {
+                    currentSparkline = sparkline;
                     const server = sparkline.dataset.server;
                     const type = sparkline.dataset.type;
                     if (server && type) {
                         showGraphPopup(e, server, type);
                     }
                 }
-            }, true);
+            });
 
-            document.addEventListener('mouseleave', (e) => {
+            document.addEventListener('mouseout', (e) => {
                 const sparkline = e.target.closest('.sparkline-hover');
                 if (sparkline) {
-                    hideGraphPopup();
+                    // Check if we're leaving to an element outside the sparkline
+                    const relatedTarget = e.relatedTarget;
+                    if (!relatedTarget || !sparkline.contains(relatedTarget)) {
+                        currentSparkline = null;
+                        hideGraphPopup();
+                    }
                 }
-            }, true);
+            });
 
             document.addEventListener('mousemove', (e) => {
                 if (elements.graphPopup.classList.contains('active')) {
-                    const sparkline = e.target.closest('.sparkline-hover');
-                    if (sparkline) {
-                        const popup = elements.graphPopup;
-                        const rect = popup.getBoundingClientRect();
-                        let left = e.clientX + 10;
-                        let top = e.clientY + 10;
+                    const popup = elements.graphPopup;
+                    const rect = popup.getBoundingClientRect();
+                    let left = e.clientX + 10;
+                    let top = e.clientY + 10;
 
-                        if (left + rect.width > window.innerWidth) {
-                            left = e.clientX - rect.width - 10;
-                        }
-                        if (top + rect.height > window.innerHeight) {
-                            top = e.clientY - rect.height - 10;
-                        }
-
-                        popup.style.left = left + 'px';
-                        popup.style.top = top + 'px';
+                    if (left + rect.width > window.innerWidth) {
+                        left = e.clientX - rect.width - 10;
                     }
+                    if (top + rect.height > window.innerHeight) {
+                        top = e.clientY - rect.height - 10;
+                    }
+
+                    popup.style.left = left + 'px';
+                    popup.style.top = top + 'px';
                 }
             });
 
