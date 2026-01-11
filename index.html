@@ -574,8 +574,13 @@
         }
 
         .server-endpoint {
-            color: var(--status-warning);
+            color: var(--text-muted);
             font-size: 0.7rem;
+        }
+
+        .server-endpoint:hover {
+            color: var(--accent-primary);
+            text-decoration: underline;
         }
 
         .server-metrics {
@@ -850,6 +855,41 @@
 
         .custom-server-inputs button {
             align-self: flex-end;
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: -0.5rem 0 1rem 0;
+        }
+
+        .endpoints-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .endpoint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .endpoint-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .endpoint-name {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .endpoint-item .btn {
+            flex-shrink: 0;
         }
 
         .modal-footer {
@@ -1688,6 +1728,19 @@
         </div>
     </div>
 
+    <!-- Endpoints Modal -->
+    <div class="modal-overlay" id="endpointsModal">
+        <div class="modal">
+            <h3 class="modal-title">Detected Endpoints</h3>
+            <p class="modal-subtitle" id="endpointsServerName"></p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">This server is load-balanced across multiple backends. Click to add an endpoint as a separate server for individual monitoring.</p>
+            <div id="endpointsList" class="endpoints-list"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeEndpointsBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ========== Version ==========
         const VERSION = '1.5.0';
@@ -1738,6 +1791,7 @@
             serverHistoryTimestamps: {}, // array of timestamps for history data points
             serverDataAgeHistory: {}, // array of last N data age readings (in minutes) per server
             serverDataAge: {}, // timestamp_osm_base per server
+            serverEndpoints: {}, // Set of seen endpoints per server
             serverVersion: {}, // Overpass version info per server
             serverVersionChangedAt: {}, // When each server's version last changed
             logs: [],
@@ -1812,6 +1866,10 @@
             aboutBtn: document.getElementById('aboutBtn'),
             aboutModal: document.getElementById('aboutModal'),
             closeAboutBtn: document.getElementById('closeAboutBtn'),
+            endpointsModal: document.getElementById('endpointsModal'),
+            endpointsServerName: document.getElementById('endpointsServerName'),
+            endpointsList: document.getElementById('endpointsList'),
+            closeEndpointsBtn: document.getElementById('closeEndpointsBtn'),
             siteRestrictionsInfo: document.getElementById('siteRestrictionsInfo'),
             siteRestrictionsList: document.getElementById('siteRestrictionsList'),
             selfHostedHeader: document.getElementById('selfHostedHeader'),
@@ -2971,6 +3029,16 @@
                     }
                 }
 
+                // Track unique endpoints (for load-balanced servers)
+                if (status.endpoint && status.endpoint !== 'none') {
+                    if (!state.serverEndpoints[url]) {
+                        state.serverEndpoints[url] = [];
+                    }
+                    if (!state.serverEndpoints[url].includes(status.endpoint)) {
+                        state.serverEndpoints[url].push(status.endpoint);
+                    }
+                }
+
                 // Persist history data across page loads
                 saveHistory();
 
@@ -3424,8 +3492,9 @@ out count;`;
             const isLoading = status.status === 'loading';
 
             // Check if we're being served by a different endpoint (load balancing)
-            const endpoint = status.endpoint;
+            const endpoint = status.endpoint ? status.endpoint.replace(/\/$/, '') : null;
             const showEndpoint = endpoint && !displayUrl.includes(endpoint) && endpoint !== 'none';
+            const endpointCount = state.serverEndpoints[url]?.length || 0;
 
             // Calculate statuses
             const latencyStatus = getLatencyStatus(status.latency);
@@ -3488,7 +3557,7 @@ out count;`;
                 el.innerHTML = `
                     <div class="server-name-col">
                         <div class="server-name">${serverName}</div>
-                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Backend: ${endpoint}">→ ${endpoint}</span>` : ''}</div>
+                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Click to see all ${endpointCount} detected endpoint${endpointCount !== 1 ? 's' : ''}" onclick="showEndpointsModal('${url}')" style="cursor: pointer;">→ ${endpoint}${endpointCount > 1 ? ' (+' + (endpointCount - 1) + ')' : ''}</span>` : ''}</div>
                     </div>
                     <div class="server-metrics">
                         ${cols.latency ? `<div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
@@ -3530,7 +3599,7 @@ out count;`;
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
                             <span class="server-name">${serverName}</span>
-                            <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Backend: ${endpoint}">→ ${endpoint}</span>` : ''}</span>
+                            <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Click to see all ${endpointCount} detected endpoint${endpointCount !== 1 ? 's' : ''}" onclick="showEndpointsModal('${url}')" style="cursor: pointer;">→ ${endpoint}${endpointCount > 1 ? ' (+' + (endpointCount - 1) + ')' : ''}</span>` : ''}</span>
                         </div>
                         <div class="server-actions">
                             <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
@@ -3706,6 +3775,46 @@ out count;`;
             elements.aboutModal.classList.remove('active');
         }
 
+        function showEndpointsModal(serverUrl) {
+            const serverName = getServerName(serverUrl);
+            const endpoints = state.serverEndpoints[serverUrl] || [];
+
+            elements.endpointsServerName.textContent = serverName + ' (' + serverUrl.replace(/^https?:\/\//, '') + ')';
+
+            elements.endpointsList.innerHTML = endpoints.length > 0 ?
+                endpoints.map(ep => {
+                    const cleanEndpoint = ep.replace(/\/$/, ''); // Remove trailing slash
+                    const endpointUrl = 'https://' + cleanEndpoint;
+                    const alreadyAdded = state.servers.some(s => s.url === endpointUrl);
+                    return `
+                        <div class="endpoint-item">
+                            <span class="endpoint-name">${cleanEndpoint}</span>
+                            ${alreadyAdded ?
+                                '<span style="color: var(--text-muted); font-size: 0.8rem;">Already added</span>' :
+                                `<button class="btn btn-secondary" onclick="addEndpointAsServer('${serverUrl}', '${cleanEndpoint}')">Add</button>`
+                            }
+                        </div>
+                    `;
+                }).join('') :
+                '<p style="color: var(--text-muted);">No endpoints detected yet. Keep monitoring to discover backend servers.</p>';
+
+            elements.endpointsModal.classList.add('active');
+        }
+
+        function closeEndpointsModal() {
+            elements.endpointsModal.classList.remove('active');
+        }
+
+        function addEndpointAsServer(originalServerUrl, endpoint) {
+            const endpointUrl = 'https://' + endpoint;
+            const baseName = getServerName(originalServerUrl);
+            const endpointName = baseName + ' (' + endpoint.split('.')[0] + ')';
+
+            if (addServer(endpointUrl, endpointName)) {
+                showEndpointsModal(originalServerUrl); // Refresh the modal
+            }
+        }
+
         // ========== Event Listeners ==========
         function setupEventListeners() {
             elements.themeToggle.addEventListener('click', toggleTheme);
@@ -3777,6 +3886,10 @@ out count;`;
 
             elements.aboutBtn.addEventListener('click', openAboutModal);
             elements.closeAboutBtn.addEventListener('click', closeAboutModal);
+            elements.closeEndpointsBtn.addEventListener('click', closeEndpointsModal);
+            elements.endpointsModal.addEventListener('click', (e) => {
+                if (e.target === elements.endpointsModal) closeEndpointsModal();
+            });
             elements.copyConfigUrlBtn.addEventListener('click', () => {
                 elements.configUrlInput.select();
                 navigator.clipboard.writeText(elements.configUrlInput.value).then(() => {
@@ -3891,6 +4004,9 @@ out count;`;
                     }
                     if (elements.aboutModal.classList.contains('active')) {
                         closeAboutModal();
+                    }
+                    if (elements.endpointsModal.classList.contains('active')) {
+                        closeEndpointsModal();
                     }
                 }
             });
