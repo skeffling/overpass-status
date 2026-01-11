@@ -695,6 +695,15 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: var(--spacing-sm);
+            transition: max-height var(--transition-normal), opacity var(--transition-normal), padding var(--transition-normal);
+            max-height: 1000px;
+            overflow: hidden;
+        }
+
+        .landmarks-grid.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
         }
 
         .landmark-card {
@@ -1202,20 +1211,21 @@
 
         <!-- Landmark Tests Section -->
         <section class="section">
-            <div class="section-header">
+            <div class="section-header section-header-clickable" id="landmarksToggle">
                 <h2 class="section-title">
+                    <span class="collapse-icon" id="landmarksCollapseIcon">&#9654;</span>
                     <span>&#127757;</span>
                     <span>Landmark Tests</span>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(click to test)</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(click cards to test)</span>
                 </h2>
-                <div class="section-actions">
+                <div class="section-actions" onclick="event.stopPropagation();">
                     <button class="btn btn-secondary" id="runTestsBtn">
                         <span>&#9654;</span>
                         <span>Run All</span>
                     </button>
                 </div>
             </div>
-            <div class="landmarks-grid" id="landmarksGrid">
+            <div class="landmarks-grid collapsed" id="landmarksGrid">
                 <!-- Landmark cards will be inserted here -->
             </div>
         </section>
@@ -1345,6 +1355,7 @@
             servers: [],
             theme: 'light',
             autoRefreshInterval: 180000, // 3 minutes default
+            landmarksCollapsed: true, // collapsed by default
             landmarkResults: {},
             serverStatuses: {},
             serverDataAge: {}, // timestamp_osm_base per server
@@ -1354,6 +1365,7 @@
         };
 
         let autoRefreshTimer = null;
+        let slotCountdownTimer = null;
 
         // ========== Request Queue (throttle per server) ==========
         const serverQueues = {}; // { serverUrl: { running: 0, queue: [] } }
@@ -1420,7 +1432,9 @@
             clearLogBtn: document.getElementById('clearLogBtn'),
             logToggle: document.getElementById('logToggle'),
             logPane: document.getElementById('logPane'),
-            logCollapseIcon: document.getElementById('logCollapseIcon')
+            logCollapseIcon: document.getElementById('logCollapseIcon'),
+            landmarksToggle: document.getElementById('landmarksToggle'),
+            landmarksCollapseIcon: document.getElementById('landmarksCollapseIcon')
         };
 
         // ========== Storage ==========
@@ -1428,7 +1442,8 @@
             localStorage.setItem('overpass-status', JSON.stringify({
                 servers: state.servers,
                 theme: state.theme,
-                autoRefreshInterval: state.autoRefreshInterval
+                autoRefreshInterval: state.autoRefreshInterval,
+                landmarksCollapsed: state.landmarksCollapsed
             }));
         }
 
@@ -1453,6 +1468,7 @@
                     }
                     state.theme = data.theme || 'light';
                     state.autoRefreshInterval = data.autoRefreshInterval ?? 180000;
+                    state.landmarksCollapsed = data.landmarksCollapsed ?? true; // default collapsed
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -1524,6 +1540,13 @@
             elements.logCollapseIcon.classList.toggle('expanded', isCollapsed);
         }
 
+        function toggleLandmarks() {
+            state.landmarksCollapsed = !state.landmarksCollapsed;
+            elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
+            elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
+            saveState();
+        }
+
         function formatTimestamp(date) {
             return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
                    '.' + String(date.getMilliseconds()).padStart(3, '0');
@@ -1572,25 +1595,44 @@
             return `Next slot available in ${Math.ceil(diffSecs / 60)}m`;
         }
 
-        function formatNextSlotDetail(status) {
+        function formatNextSlotDetail(status, serverUrl) {
             if (!status.nextSlotTimes || status.nextSlotTimes.length === 0 || status.slotsAvailable > 0) {
                 return '';
             }
             // Sort to find the earliest available slot
             const sorted = [...status.nextSlotTimes].sort((a, b) => a - b);
             const nextSlot = sorted[0];
+            const countdown = formatSlotCountdown(nextSlot);
+
+            return `<div class="metric-detail slot-countdown" data-next-slot="${nextSlot.toISOString()}" data-server="${serverUrl}">${countdown}</div>`;
+        }
+
+        function formatSlotCountdown(nextSlotDate) {
             const now = new Date();
-            const diffMs = nextSlot - now;
+            const diffMs = nextSlotDate - now;
 
             if (diffMs <= 0) {
-                return '<div class="metric-detail">available now</div>';
+                return 'available now';
             }
 
             const diffSecs = Math.ceil(diffMs / 1000);
             if (diffSecs < 60) {
-                return `<div class="metric-detail">in ${diffSecs}s</div>`;
+                return `in ${diffSecs}s`;
             }
-            return `<div class="metric-detail">in ${Math.ceil(diffSecs / 60)}m</div>`;
+            const mins = Math.floor(diffSecs / 60);
+            const secs = diffSecs % 60;
+            return `in ${mins}m ${secs}s`;
+        }
+
+        function updateSlotCountdowns() {
+            const countdowns = document.querySelectorAll('.slot-countdown');
+            countdowns.forEach(el => {
+                const nextSlotStr = el.getAttribute('data-next-slot');
+                if (nextSlotStr) {
+                    const nextSlot = new Date(nextSlotStr);
+                    el.textContent = formatSlotCountdown(nextSlot);
+                }
+            });
         }
 
         function parseGenerator(generator) {
@@ -2303,7 +2345,7 @@ out count;`;
                         <div class="metric-value ${status.slotsAvailable === 0 ? 'error' : 'ok'}">
                             ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
-                        ${formatNextSlotDetail(status)}
+                        ${formatNextSlotDetail(status, url)}
                     </div>
                     <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}">
                         <div class="metric-label">Active</div>
@@ -2523,6 +2565,7 @@ out count;`;
             });
 
             elements.logToggle.addEventListener('click', toggleLogPane);
+            elements.landmarksToggle.addEventListener('click', toggleLandmarks);
 
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -2545,6 +2588,10 @@ out count;`;
             // Set auto-refresh dropdown to saved value
             elements.autoRefreshSelect.value = state.autoRefreshInterval;
 
+            // Apply landmarks collapsed state
+            elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
+            elements.landmarksCollapseIcon.classList.toggle('expanded', !state.landmarksCollapsed);
+
             renderServers();
             renderLandmarks();
             renderLogs();
@@ -2555,6 +2602,9 @@ out count;`;
                 fetchAllStatuses();
             }
             startAutoRefresh();
+
+            // Start slot countdown timer (updates every second)
+            slotCountdownTimer = setInterval(updateSlotCountdowns, 1000);
         }
 
         // Start the app
