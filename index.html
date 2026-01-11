@@ -2186,13 +2186,17 @@
         function getLatencySparkline(serverUrl, width = 80, height = 20, responsive = false) {
             const history = state.serverLatencyHistory[serverUrl];
             if (!history || history.length < 2) return '';
-            return createSparklineSVG(history, width, height, responsive);
+            // Show only last 20 points for on-screen sparklines
+            const recentHistory = history.slice(-20);
+            return createSparklineSVG(recentHistory, width, height, responsive);
         }
 
         function getActiveSparkline(serverUrl, width = 80, height = 20, responsive = false) {
             const history = state.serverActiveHistory[serverUrl];
             if (!history || history.length < 2) return '';
-            return createSparklineSVG(history, width, height, responsive);
+            // Show only last 20 points for on-screen sparklines
+            const recentHistory = history.slice(-20);
+            return createSparklineSVG(recentHistory, width, height, responsive);
         }
 
         function getAverageSlots(serverUrl) {
@@ -2831,13 +2835,13 @@
                 state.serverStatuses[url] = status;
                 state.serverLastUpdated[url] = new Date();
 
-                // Track latency history (keep last 20 readings)
+                // Track latency history (keep last 100 readings)
                 if (status.latency && status.status !== 'error') {
                     if (!state.serverLatencyHistory[url]) {
                         state.serverLatencyHistory[url] = [];
                     }
                     state.serverLatencyHistory[url].push(status.latency);
-                    if (state.serverLatencyHistory[url].length > 20) {
+                    if (state.serverLatencyHistory[url].length > 100) {
                         state.serverLatencyHistory[url].shift();
                     }
 
@@ -2846,30 +2850,30 @@
                         state.serverHistoryTimestamps[url] = [];
                     }
                     state.serverHistoryTimestamps[url].push(Date.now());
-                    if (state.serverHistoryTimestamps[url].length > 20) {
+                    if (state.serverHistoryTimestamps[url].length > 100) {
                         state.serverHistoryTimestamps[url].shift();
                     }
                 }
 
-                // Track slots history (keep last 20 readings)
+                // Track slots history (keep last 100 readings)
                 if (status.slotsAvailable !== null && status.status !== 'error') {
                     if (!state.serverSlotsHistory[url]) {
                         state.serverSlotsHistory[url] = [];
                     }
                     state.serverSlotsHistory[url].push(status.slotsAvailable);
-                    if (state.serverSlotsHistory[url].length > 20) {
+                    if (state.serverSlotsHistory[url].length > 100) {
                         state.serverSlotsHistory[url].shift();
                     }
                 }
 
-                // Track active queries history (keep last 20 readings)
+                // Track active queries history (keep last 100 readings)
                 if (status.status !== 'error') {
                     const activeCount = status.runningQueries ? status.runningQueries.length : 0;
                     if (!state.serverActiveHistory[url]) {
                         state.serverActiveHistory[url] = [];
                     }
                     state.serverActiveHistory[url].push(activeCount);
-                    if (state.serverActiveHistory[url].length > 20) {
+                    if (state.serverActiveHistory[url].length > 100) {
                         state.serverActiveHistory[url].shift();
                     }
                 }
