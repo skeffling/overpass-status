@@ -604,48 +604,47 @@
 
         .landmark-servers {
             display: flex;
-            flex-wrap: wrap;
             gap: 3px;
-            justify-content: flex-end;
+            align-items: center;
         }
 
-        .landmark-server-result {
+        .landmark-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
-            gap: 2px;
-            padding: 1px 4px;
-            background: var(--bg-secondary);
-            border-radius: 3px;
-            font-size: 0.65rem;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            cursor: default;
+            transition: transform var(--transition-fast);
         }
 
-        .landmark-server-result.ok {
-            background: var(--status-ok-bg);
+        .landmark-dot:hover {
+            transform: scale(1.2);
         }
 
-        .landmark-server-result.error {
-            background: var(--status-error-bg);
+        .landmark-dot.ok {
+            background: var(--status-ok);
+            color: white;
         }
 
-        .landmark-server-result.loading {
+        .landmark-dot.error {
+            background: var(--status-error);
+            color: white;
+        }
+
+        .landmark-dot.loading {
             background: var(--status-pending-bg);
-        }
-
-        .landmark-server-name {
             color: var(--text-muted);
-            max-width: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
-        .landmark-server-status {
-            font-weight: 600;
+        .landmark-dot.pending {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
         }
-
-        .landmark-server-status.ok { color: var(--status-ok); }
-        .landmark-server-status.error { color: var(--status-error); }
-        .landmark-server-status.pending { color: var(--text-muted); }
 
         .landmark-status-icon {
             font-size: 1rem;
@@ -1623,30 +1622,32 @@ out count;`;
                 elements.landmarksGrid.appendChild(card);
             }
 
-            // Generate per-server results
+            // Generate per-server results as compact dots
             let serverResultsHtml = '';
             if (state.servers.length > 0) {
                 serverResultsHtml = '<div class="landmark-servers">';
-                state.servers.forEach(serverUrl => {
+                state.servers.forEach((serverUrl, index) => {
                     const result = results[serverUrl] || { status: 'pending' };
-                    const displayName = serverUrl.replace(/^https?:\/\//, '').split('.')[0];
+                    const displayName = serverUrl.replace(/^https?:\/\//, '');
+                    const shortName = displayName.split('.')[0].substring(0, 3);
                     const isLoading = result.status === 'loading';
-                    const latencyClass = result.latency ? (result.latency < 500 ? 'ok' : result.latency < 2000 ? 'warning' : 'error') : '';
 
-                    serverResultsHtml += `
-                        <div class="landmark-server-result ${result.status}">
-                            <span class="landmark-server-name">${displayName}</span>
-                            <span class="landmark-server-status ${result.status}">
-                                ${isLoading ? '...' :
-                                  result.status === 'ok' ? (result.latency + 'ms') :
-                                  result.status === 'error' ? '!' : '-'}
-                            </span>
-                        </div>
-                    `;
+                    // Tooltip with full info
+                    const tooltip = isLoading ? `${displayName}: checking...` :
+                        result.status === 'ok' ? `${displayName}: ${result.latency}ms` :
+                        result.status === 'error' ? `${displayName}: ${result.error || 'failed'}` :
+                        `${displayName}: not tested`;
+
+                    // Content inside dot
+                    const content = isLoading ? '...' :
+                        result.status === 'ok' ? result.latency :
+                        result.status === 'error' ? '!' : '-';
+
+                    serverResultsHtml += `<div class="landmark-dot ${result.status}" title="${tooltip}">${content}</div>`;
                 });
                 serverResultsHtml += '</div>';
             } else {
-                serverResultsHtml = '<span class="landmark-status-icon pending">&#8226;</span>';
+                serverResultsHtml = '<span class="landmark-status-icon pending">-</span>';
             }
 
             card.innerHTML = `
