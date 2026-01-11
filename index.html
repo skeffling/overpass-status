@@ -573,6 +573,11 @@
             color: var(--text-muted);
         }
 
+        .server-endpoint {
+            color: var(--status-warning);
+            font-size: 0.7rem;
+        }
+
         .server-metrics {
             display: flex;
             align-items: center;
@@ -3418,6 +3423,10 @@ out count;`;
             const displayUrl = url.replace(/^https?:\/\//, '');
             const isLoading = status.status === 'loading';
 
+            // Check if we're being served by a different endpoint (load balancing)
+            const endpoint = status.endpoint;
+            const showEndpoint = endpoint && !displayUrl.includes(endpoint) && endpoint !== 'none';
+
             // Calculate statuses
             const latencyStatus = getLatencyStatus(status.latency);
             const runningCount = status.runningQueries?.length || 0;
@@ -3479,7 +3488,7 @@ out count;`;
                 el.innerHTML = `
                     <div class="server-name-col">
                         <div class="server-name">${serverName}</div>
-                        <div class="server-hostname">${displayUrl}</div>
+                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Backend: ${endpoint}">→ ${endpoint}</span>` : ''}</div>
                     </div>
                     <div class="server-metrics">
                         ${cols.latency ? `<div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
@@ -3521,7 +3530,7 @@ out count;`;
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
                             <span class="server-name">${serverName}</span>
-                            <span class="server-hostname">${displayUrl}</span>
+                            <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Backend: ${endpoint}">→ ${endpoint}</span>` : ''}</span>
                         </div>
                         <div class="server-actions">
                             <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
