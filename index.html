@@ -1585,8 +1585,10 @@
         }
 
         function formatNextSlotTooltip(status) {
+            const rateLimitInfo = status.rateLimit ? `Rate limit: ${status.rateLimit} slots` : '';
+
             if (!status.nextSlotTimes || status.nextSlotTimes.length === 0) {
-                return 'Available query slots';
+                return rateLimitInfo || 'Available query slots';
             }
             // Sort to find the earliest available slot
             const sorted = [...status.nextSlotTimes].sort((a, b) => a - b);
@@ -1594,15 +1596,19 @@
             const now = new Date();
             const diffMs = nextSlot - now;
 
+            let waitInfo;
             if (diffMs <= 0) {
-                return 'Slot should be available now';
+                waitInfo = 'Slot should be available now';
+            } else {
+                const diffSecs = Math.ceil(diffMs / 1000);
+                if (diffSecs < 60) {
+                    waitInfo = `Next slot available in ${diffSecs}s`;
+                } else {
+                    waitInfo = `Next slot available in ${Math.ceil(diffSecs / 60)}m`;
+                }
             }
 
-            const diffSecs = Math.ceil(diffMs / 1000);
-            if (diffSecs < 60) {
-                return `Next slot available in ${diffSecs}s`;
-            }
-            return `Next slot available in ${Math.ceil(diffSecs / 60)}m`;
+            return rateLimitInfo ? `${rateLimitInfo}\n${waitInfo}` : waitInfo;
         }
 
         function formatNextSlotDetail(status, serverUrl) {
