@@ -403,7 +403,15 @@
 
         .server-actions {
             display: flex;
+            align-items: center;
             gap: 4px;
+        }
+
+        .server-last-updated {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-right: 4px;
+            white-space: nowrap;
         }
 
         .server-error {
@@ -1364,6 +1372,7 @@
             landmarksCollapsed: true, // collapsed by default
             landmarkResults: {},
             serverStatuses: {},
+            serverLastUpdated: {}, // when each server was last refreshed
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
             logs: [],
@@ -1562,6 +1571,22 @@
                    '.' + String(date.getMilliseconds()).padStart(3, '0');
         }
 
+        function formatRelativeTime(date) {
+            if (!date) return '';
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSecs = Math.floor(diffMs / 1000);
+            const diffMins = Math.floor(diffSecs / 60);
+            const diffHours = Math.floor(diffMins / 60);
+
+            if (diffSecs < 5) return 'Just now';
+            if (diffSecs < 60) return `${Math.floor(diffSecs / 10) * 10}s ago`;  // 10s, 20s, 30s, etc.
+            if (diffMins === 1) return '1 minute ago';
+            if (diffMins < 60) return `${diffMins} minutes ago`;
+            if (diffHours === 1) return '1 hour ago';
+            return `${diffHours} hours ago`;
+        }
+
         function formatLatency(ms) {
             if (ms < 1000) return ms;
             if (ms < 10000) return (ms / 1000).toFixed(1) + 's';
@@ -1640,7 +1665,8 @@
             return `in ${mins}m ${secs}s`;
         }
 
-        function updateSlotCountdowns() {
+        function updateDynamicTimes() {
+            // Update slot countdowns
             const countdowns = document.querySelectorAll('.slot-countdown');
             countdowns.forEach(el => {
                 const nextSlotStr = el.getAttribute('data-next-slot');
@@ -1649,6 +1675,9 @@
                     el.textContent = formatSlotCountdown(nextSlot);
                 }
             });
+
+            // Update last updated times
+            updateLastUpdatedTimes();
         }
 
         function formatDataAgeTooltip(isoTimestamp) {
@@ -1663,11 +1692,24 @@
             if (!versionInfo) {
                 return 'Overpass API software version\nRun a query to check';
             }
-            let tooltip = `Overpass API software version\n${versionInfo.full}`;
+            const status = getVersionStatus(versionInfo);
+            const statusText = status === 'ok' ? ' (latest)' : status === 'warning' ? ' (older)' : '';
+            let tooltip = `Overpass API software version${statusText}\n${versionInfo.full}`;
             if (versionInfo.commit) {
                 tooltip += `\nCommit: ${versionInfo.commit}`;
             }
             return tooltip;
+        }
+
+        function updateLastUpdatedTimes() {
+            const elements = document.querySelectorAll('.server-last-updated');
+            elements.forEach(el => {
+                const serverUrl = el.getAttribute('data-server-url');
+                if (serverUrl && state.serverLastUpdated[serverUrl]) {
+                    el.textContent = formatRelativeTime(state.serverLastUpdated[serverUrl]);
+                    el.title = state.serverLastUpdated[serverUrl].toLocaleString();
+                }
+            });
         }
 
         function parseGenerator(generator) {
@@ -1681,6 +1723,46 @@
                 };
             }
             return { full: generator, version: generator, commit: null };
+        }
+
+        function compareVersions(v1, v2) {
+            // Compare semantic versions like "0.7.62.8"
+            // Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+            const parts1 = v1.split('.').map(n => parseInt(n) || 0);
+            const parts2 = v2.split('.').map(n => parseInt(n) || 0);
+            const maxLen = Math.max(parts1.length, parts2.length);
+
+            for (let i = 0; i < maxLen; i++) {
+                const p1 = parts1[i] || 0;
+                const p2 = parts2[i] || 0;
+                if (p1 > p2) return 1;
+                if (p1 < p2) return -1;
+            }
+            return 0;
+        }
+
+        function getLatestVersion() {
+            // Find the latest version among all servers
+            let latest = null;
+            for (const url of Object.keys(state.serverVersion)) {
+                const info = state.serverVersion[url];
+                if (info && info.version) {
+                    if (!latest || compareVersions(info.version, latest) > 0) {
+                        latest = info.version;
+                    }
+                }
+            }
+            return latest;
+        }
+
+        function getVersionStatus(versionInfo) {
+            if (!versionInfo || !versionInfo.version) return '';
+            const latest = getLatestVersion();
+            if (!latest) return '';
+            const cmp = compareVersions(versionInfo.version, latest);
+            if (cmp === 0) return 'ok';  // Latest version
+            if (cmp < 0) return 'warning';  // Older version
+            return '';
         }
 
         function truncateText(text, maxLength = 500) {
@@ -2000,6 +2082,7 @@
 
                 const status = await fetchServerStatus(url);
                 state.serverStatuses[url] = status;
+                state.serverLastUpdated[url] = new Date();
                 renderServerCard(url);
 
                 // Also fetch metadata (version, data age) via a simple query
@@ -2324,6 +2407,9 @@ out count;`;
                             <span class="server-hostname">${displayUrl}</span>
                         </div>
                         <div class="server-actions">
+                            <span class="server-last-updated" data-server-url="${url}" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : 'Not yet updated'}">
+                                ${formatRelativeTime(state.serverLastUpdated[url])}
+                            </span>
                             <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
                                 &#128220;
                             </button>
@@ -2361,6 +2447,9 @@ out count;`;
                         ${status.endpoint ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
                     </div>
                     <div class="server-actions">
+                        <span class="server-last-updated" data-server-url="${url}" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : 'Not yet updated'}">
+                            ${formatRelativeTime(state.serverLastUpdated[url])}
+                        </span>
                         <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
                             &#128220;
                         </button>
@@ -2392,9 +2481,9 @@ out count;`;
                         <div class="metric-label">Data Age</div>
                         <div class="metric-value ${dataAgeStatus}">${dataAge?.text || '--'}</div>
                     </div>
-                    <div class="metric-card" title="${formatVersionTooltip(versionInfo)}">
+                    <div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
                         <div class="metric-label">Version</div>
-                        <div class="metric-value version-value">${versionInfo ? versionInfo.version : '--'}</div>
+                        <div class="metric-value version-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</div>
                         ${versionInfo?.commit ? `<div class="metric-detail commit-hash">${versionInfo.commit}</div>` : ''}
                     </div>
                 </div>
@@ -2642,7 +2731,7 @@ out count;`;
             startAutoRefresh();
 
             // Start slot countdown timer (updates every second)
-            slotCountdownTimer = setInterval(updateSlotCountdowns, 1000);
+            slotCountdownTimer = setInterval(updateDynamicTimes, 1000);
         }
 
         // Start the app
