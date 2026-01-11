@@ -1256,11 +1256,19 @@
                 mapping applications or a researcher analyzing geographic data, this dashboard gives you real-time
                 visibility into server availability.
             </p>
+            <p style="margin-top: var(--spacing-sm);"><strong>What we monitor for each server:</strong></p>
             <ul>
-                <li><strong>Server Status</strong> — Check latency, available query slots, and running queries</li>
-                <li><strong>Data Freshness</strong> — See how recently each server's OSM data was updated</li>
-                <li><strong>Landmark Tests</strong> — Verify servers return real data by querying famous locations worldwide</li>
-                <li><strong>Multi-Server Comparison</strong> — Monitor multiple public and self-hosted instances side-by-side</li>
+                <li><strong>Latency</strong> — Response time to the status endpoint</li>
+                <li><strong>Query Slots</strong> — Available capacity for new queries (rate limiting)</li>
+                <li><strong>Active Queries</strong> — Currently running queries on the server</li>
+                <li><strong>Data Age</strong> — How recently the server's OSM data was updated</li>
+                <li><strong>Version</strong> — Overpass API software version and git commit</li>
+            </ul>
+            <p style="margin-top: var(--spacing-sm);"><strong>Color coding at a glance:</strong></p>
+            <ul>
+                <li><span style="color: #4ade80;">&#9679; Green</span> — Healthy (fast latency, slots available, fresh data, latest version)</li>
+                <li><span style="color: #fbbf24;">&#9679; Orange</span> — Warning (moderate latency, some slots in use, slightly stale data, older version)</li>
+                <li><span style="color: #f87171;">&#9679; Red</span> — Issue (slow latency, no slots available, stale data)</li>
             </ul>
             <p style="margin-top: var(--spacing-sm); opacity: 0.8;">
                 Add servers using the button below, or expand Landmark Tests to run queries against iconic places like
