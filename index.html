@@ -73,13 +73,13 @@
             --bg-secondary: #1e293b;
             --bg-card: rgba(30, 41, 59, 0.8);
             --bg-card-hover: rgba(30, 41, 59, 0.95);
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #b0bcc9;
+            --border-color: rgba(255, 255, 255, 0.12);
             --shadow-color: rgba(0, 0, 0, 0.3);
             --shadow-glow: rgba(0, 0, 0, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.12);
         }
 
         /* ========== Base Styles ========== */
@@ -123,6 +123,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: var(--spacing-md);
+            overflow-x: hidden;
         }
 
         /* ========== Header ========== */
@@ -214,6 +215,7 @@
         /* ========== Section ========== */
         .section {
             margin-bottom: var(--spacing-md);
+            overflow: hidden;
         }
 
         .section-header {
@@ -289,11 +291,33 @@
             background: var(--status-error-bg);
         }
 
+        .refresh-select {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .refresh-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
         /* ========== Server Cards ========== */
         .servers-grid {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
             gap: var(--spacing-sm);
+            width: 100%;
+        }
+
+        @media (max-width: 620px) {
+            .servers-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .server-card {
@@ -305,6 +329,8 @@
             padding: var(--spacing-md);
             transition: all var(--transition-normal);
             box-shadow: 0 2px 15px var(--shadow-color);
+            overflow: hidden;
+            min-width: 0;
         }
 
         .server-card:hover {
@@ -329,6 +355,22 @@
             display: flex;
             align-items: center;
             gap: var(--spacing-xs);
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .server-name {
+            font-weight: 600;
+        }
+
+        .server-hostname {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .server-url-icon {
@@ -340,6 +382,22 @@
             font-size: 0.7rem;
             color: var(--text-muted);
             font-weight: normal;
+        }
+
+        .version-value {
+            font-size: 0.95rem;
+            color: var(--accent-primary);
+        }
+
+        .commit-hash {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .server-actions {
+            display: flex;
+            gap: 4px;
         }
 
         .server-error {
@@ -371,7 +429,7 @@
 
         .server-metrics {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: var(--spacing-sm);
         }
 
@@ -471,11 +529,17 @@
             margin-bottom: var(--spacing-lg);
         }
 
+        .modal-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
         .modal-section-title {
             font-size: 0.875rem;
             font-weight: 600;
             color: var(--text-muted);
-            margin-bottom: var(--spacing-sm);
         }
 
         .preset-buttons {
@@ -515,13 +579,13 @@
             color: var(--text-muted);
         }
 
-        .custom-url-input {
+        .custom-server-inputs {
             display: flex;
+            flex-direction: column;
             gap: var(--spacing-sm);
         }
 
-        .custom-url-input input {
-            flex: 1;
+        .custom-server-inputs input {
             padding: var(--spacing-sm) var(--spacing-md);
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -531,10 +595,14 @@
             transition: all var(--transition-fast);
         }
 
-        .custom-url-input input:focus {
+        .custom-server-inputs input:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .custom-server-inputs button {
+            align-self: flex-end;
         }
 
         .modal-footer {
@@ -544,6 +612,82 @@
             margin-top: var(--spacing-xl);
             padding-top: var(--spacing-lg);
             border-top: 1px solid var(--border-color);
+        }
+
+        /* About Modal */
+        .about-content {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .about-content p {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .about-content h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+        }
+
+        .about-content ul {
+            margin: 0 0 var(--spacing-md) var(--spacing-lg);
+        }
+
+        .about-content li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .about-content a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .about-content a:hover {
+            text-decoration: underline;
+        }
+
+        .about-content code {
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.8rem;
+        }
+
+        .about-support {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .about-support p {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .kofi-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background: #ff5e5b;
+            color: white;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .kofi-btn:hover {
+            background: #e54542;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 94, 91, 0.4);
         }
 
         /* ========== Landmark Tests ========== */
@@ -561,11 +705,18 @@
             border-radius: var(--radius-sm);
             padding: var(--spacing-sm);
             display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
+            flex-direction: column;
+            gap: var(--spacing-xs);
             transition: all var(--transition-fast);
             cursor: pointer;
             user-select: none;
+        }
+
+        .landmark-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            width: 100%;
         }
 
         .landmark-card:hover {
@@ -610,8 +761,20 @@
 
         .landmark-servers {
             display: flex;
+            flex-wrap: wrap;
             gap: 3px;
             align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .landmark-servers-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            width: 100%;
+            padding-top: var(--spacing-xs);
+            border-top: 1px solid var(--border-color);
         }
 
         .landmark-dot {
@@ -651,6 +814,16 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-muted);
+        }
+
+        .dot-spinner {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         .landmark-status-icon {
@@ -849,6 +1022,20 @@
             color: var(--text-muted);
         }
 
+        .log-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--accent-primary);
+            color: white;
+            font-size: 0.75rem;
+        }
+
+        .log-filter-bar strong {
+            font-weight: 600;
+        }
+
         /* ========== Loading States ========== */
         .loading {
             display: inline-block;
@@ -920,7 +1107,7 @@
             }
 
             .server-metrics {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             }
 
             .landmarks-grid {
@@ -963,9 +1150,8 @@
                 </div>
             </div>
             <div class="header-controls">
-                <button class="btn btn-secondary" id="refreshAllBtn">
-                    <span>&#8635;</span>
-                    <span>Refresh All</span>
+                <button class="btn btn-icon btn-secondary" id="aboutBtn" title="About">
+                    &#9432;
                 </button>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <span class="theme-toggle-icons">
@@ -984,6 +1170,17 @@
                     <span>Servers</span>
                 </h2>
                 <div class="section-actions">
+                    <select class="refresh-select" id="autoRefreshSelect" title="Auto-refresh interval">
+                        <option value="0">Auto: Off</option>
+                        <option value="60000">Auto: 1min</option>
+                        <option value="180000" selected>Auto: 3min</option>
+                        <option value="600000">Auto: 10min</option>
+                        <option value="1800000">Auto: 30min</option>
+                    </select>
+                    <button class="btn btn-secondary" id="refreshAllBtn">
+                        <span>&#8635;</span>
+                        <span>Refresh</span>
+                    </button>
                     <button class="btn btn-primary" id="addServerBtn">
                         <span>+</span>
                         <span>Add Server</span>
@@ -1049,13 +1246,54 @@
         </section>
     </div>
 
+    <!-- About Modal -->
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal">
+            <h3 class="modal-title">About Overpass Status</h3>
+
+            <div class="about-content">
+                <p><strong>Overpass Status</strong> is a browser-based monitoring tool for <a href="https://wiki.openstreetmap.org/wiki/Overpass_API" target="_blank" rel="noopener">Overpass API</a> servers.</p>
+
+                <h4>Features</h4>
+                <ul>
+                    <li><strong>Server Monitoring</strong> - Check status, latency, available slots, and active queries</li>
+                    <li><strong>Data Freshness</strong> - See how recently each server's OSM data was updated</li>
+                    <li><strong>Landmark Tests</strong> - Verify servers are returning real data by querying famous locations worldwide</li>
+                    <li><strong>Multi-Server</strong> - Compare multiple public or self-hosted Overpass instances</li>
+                    <li><strong>API Logging</strong> - View all requests and responses in real-time</li>
+                </ul>
+
+                <h4>How It Works</h4>
+                <p>This tool runs entirely in your browser - no backend server required. It makes direct API calls to Overpass servers and displays the results. Your server list and preferences are saved locally in your browser.</p>
+
+                <h4>Self-Hosted Servers</h4>
+                <p>If using your own Overpass instance, ensure CORS headers are configured:</p>
+                <code>Access-Control-Allow-Origin: *</code>
+
+                <div class="about-support">
+                    <p>Find this tool useful? Consider buying me a coffee!</p>
+                    <a href="https://ko-fi.com/pitstopper" target="_blank" rel="noopener" class="kofi-btn">
+                        <span>&#9749;</span> Support on Ko-fi
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeAboutBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Server Modal -->
     <div class="modal-overlay" id="addServerModal">
         <div class="modal">
             <h3 class="modal-title">Add Server</h3>
 
             <div class="modal-section">
-                <div class="modal-section-title">Public APIs</div>
+                <div class="modal-section-header">
+                    <div class="modal-section-title">Public APIs</div>
+                    <button class="btn btn-secondary" id="addAllServersBtn">Add All</button>
+                </div>
                 <div class="preset-buttons" id="presetButtons">
                     <!-- Preset buttons will be inserted here -->
                 </div>
@@ -1063,7 +1301,8 @@
 
             <div class="modal-section">
                 <div class="modal-section-title">Custom Server</div>
-                <div class="custom-url-input">
+                <div class="custom-server-inputs">
+                    <input type="text" id="customServerName" placeholder="Display name (e.g., My Server)">
                     <input type="text" id="customServerUrl" placeholder="https://your-overpass-server.com">
                     <button class="btn btn-primary" id="addCustomServerBtn">Add</button>
                 </div>
@@ -1081,10 +1320,13 @@
             statusTimeout: 10000,
             queryTimeout: 15000,
             presetServers: [
-                { url: 'https://overpass-api.de', name: 'Main (overpass-api.de)', desc: 'Primary public instance' },
-                { url: 'https://z.overpass-api.de', name: 'Z (z.overpass-api.de)', desc: 'Alternative endpoint' },
-                { url: 'https://lz4.overpass-api.de', name: 'LZ4 (lz4.overpass-api.de)', desc: 'Compressed responses' },
-                { url: 'https://overpass.kumi.systems', name: 'Kumi Systems', desc: 'Community instance' }
+                { url: 'https://overpass-api.de', name: 'Main', desc: 'Primary public instance' },
+                { url: 'https://z.overpass-api.de', name: 'Z', desc: 'Alternative endpoint' },
+                { url: 'https://lz4.overpass-api.de', name: 'LZ4', desc: 'Compressed responses' },
+                { url: 'https://overpass.kumi.systems', name: 'Kumi', desc: 'Community instance' },
+                { url: 'https://maps.mail.ru/osm/tools/overpass', name: 'VK Maps', desc: 'Russia-based instance' },
+                { url: 'https://overpass.private.coffee', name: 'Coffee', desc: 'Community instance' },
+                { url: 'https://overpass.osm.jp', name: 'Japan', desc: 'Japan-based instance' }
             ],
             landmarks: [
                 { name: 'Eiffel Tower', icon: '&#127481;', location: 'Paris, France', lat: 48.858370, lon: 2.294481, query: 'tourism=attraction' },
@@ -1102,15 +1344,60 @@
         let state = {
             servers: [],
             theme: 'light',
+            autoRefreshInterval: 180000, // 3 minutes default
             landmarkResults: {},
             serverStatuses: {},
-            logs: []
+            serverDataAge: {}, // timestamp_osm_base per server
+            serverVersion: {}, // Overpass version info per server
+            logs: [],
+            logFilter: null // null = show all, or serverUrl to filter
         };
+
+        let autoRefreshTimer = null;
+
+        // ========== Request Queue (throttle per server) ==========
+        const serverQueues = {}; // { serverUrl: { running: 0, queue: [] } }
+        const MAX_CONCURRENT_PER_SERVER = 1; // Only 1 request at a time per server
+
+        function getServerQueue(serverUrl) {
+            if (!serverQueues[serverUrl]) {
+                serverQueues[serverUrl] = { running: 0, queue: [] };
+            }
+            return serverQueues[serverUrl];
+        }
+
+        async function enqueueRequest(serverUrl, requestFn) {
+            const q = getServerQueue(serverUrl);
+
+            return new Promise((resolve) => {
+                const executeRequest = async () => {
+                    q.running++;
+                    try {
+                        const result = await requestFn();
+                        resolve(result);
+                    } finally {
+                        q.running--;
+                        // Process next in queue
+                        if (q.queue.length > 0) {
+                            const next = q.queue.shift();
+                            next();
+                        }
+                    }
+                };
+
+                if (q.running < MAX_CONCURRENT_PER_SERVER) {
+                    executeRequest();
+                } else {
+                    q.queue.push(executeRequest);
+                }
+            });
+        }
 
         // ========== DOM Elements ==========
         const elements = {
             themeToggle: document.getElementById('themeToggle'),
             refreshAllBtn: document.getElementById('refreshAllBtn'),
+            autoRefreshSelect: document.getElementById('autoRefreshSelect'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -1118,9 +1405,14 @@
             addServerBtnEmpty: document.getElementById('addServerBtnEmpty'),
             addServerModal: document.getElementById('addServerModal'),
             presetButtons: document.getElementById('presetButtons'),
+            customServerName: document.getElementById('customServerName'),
             customServerUrl: document.getElementById('customServerUrl'),
             addCustomServerBtn: document.getElementById('addCustomServerBtn'),
             closeModalBtn: document.getElementById('closeModalBtn'),
+            addAllServersBtn: document.getElementById('addAllServersBtn'),
+            aboutBtn: document.getElementById('aboutBtn'),
+            aboutModal: document.getElementById('aboutModal'),
+            closeAboutBtn: document.getElementById('closeAboutBtn'),
             runTestsBtn: document.getElementById('runTestsBtn'),
             logContent: document.getElementById('logContent'),
             logEmpty: document.getElementById('logEmpty'),
@@ -1135,7 +1427,8 @@
         function saveState() {
             localStorage.setItem('overpass-status', JSON.stringify({
                 servers: state.servers,
-                theme: state.theme
+                theme: state.theme,
+                autoRefreshInterval: state.autoRefreshInterval
             }));
         }
 
@@ -1144,8 +1437,22 @@
                 const saved = localStorage.getItem('overpass-status');
                 if (saved) {
                     const data = JSON.parse(saved);
-                    state.servers = data.servers || [];
+                    // Migrate old format (array of strings) to new format (array of objects)
+                    if (data.servers && data.servers.length > 0) {
+                        if (typeof data.servers[0] === 'string') {
+                            // Old format - migrate
+                            state.servers = data.servers.map(url => {
+                                // Try to find matching preset for name
+                                const preset = CONFIG.presetServers.find(p => p.url === url);
+                                const name = preset ? preset.name : url.replace(/^https?:\/\//, '').split('/')[0].split('.')[0];
+                                return { url, name };
+                            });
+                        } else {
+                            state.servers = data.servers;
+                        }
+                    }
                     state.theme = data.theme || 'light';
+                    state.autoRefreshInterval = data.autoRefreshInterval ?? 180000;
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -1155,6 +1462,31 @@
             if (!localStorage.getItem('overpass-status')) {
                 state.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
+        }
+
+        // ========== Auto Refresh ==========
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            if (state.autoRefreshInterval > 0) {
+                autoRefreshTimer = setInterval(() => {
+                    if (state.servers.length > 0) {
+                        fetchAllStatuses();
+                    }
+                }, state.autoRefreshInterval);
+            }
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        }
+
+        function setAutoRefreshInterval(interval) {
+            state.autoRefreshInterval = interval;
+            saveState();
+            startAutoRefresh();
         }
 
         // ========== Logging ==========
@@ -1168,6 +1500,21 @@
 
         function clearLogs() {
             state.logs = [];
+            state.logFilter = null;
+            renderLogs();
+        }
+
+        function showServerLogs(serverUrl) {
+            state.logFilter = serverUrl;
+            // Expand log pane if collapsed
+            if (elements.logPane.classList.contains('collapsed')) {
+                toggleLogPane();
+            }
+            renderLogs();
+        }
+
+        function clearLogFilter() {
+            state.logFilter = null;
             renderLogs();
         }
 
@@ -1189,27 +1536,123 @@
             return Math.round(ms / 60000) + 'm';
         }
 
+        function formatDataAge(isoTimestamp) {
+            if (!isoTimestamp) return null;
+            const date = new Date(isoTimestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) return { text: '<1m', status: 'ok' };
+            if (diffMins < 60) return { text: `${diffMins}m`, status: diffMins < 10 ? 'ok' : 'ok' };
+            if (diffHours < 24) return { text: `${diffHours}h`, status: diffHours < 2 ? 'ok' : 'warning' };
+            return { text: `${diffDays}d`, status: 'error' };
+        }
+
+        function formatNextSlotTooltip(status) {
+            if (!status.nextSlotTimes || status.nextSlotTimes.length === 0) {
+                return 'Available query slots';
+            }
+            // Sort to find the earliest available slot
+            const sorted = [...status.nextSlotTimes].sort((a, b) => a - b);
+            const nextSlot = sorted[0];
+            const now = new Date();
+            const diffMs = nextSlot - now;
+
+            if (diffMs <= 0) {
+                return 'Slot should be available now';
+            }
+
+            const diffSecs = Math.ceil(diffMs / 1000);
+            if (diffSecs < 60) {
+                return `Next slot available in ${diffSecs}s`;
+            }
+            return `Next slot available in ${Math.ceil(diffSecs / 60)}m`;
+        }
+
+        function formatNextSlotDetail(status) {
+            if (!status.nextSlotTimes || status.nextSlotTimes.length === 0 || status.slotsAvailable > 0) {
+                return '';
+            }
+            // Sort to find the earliest available slot
+            const sorted = [...status.nextSlotTimes].sort((a, b) => a - b);
+            const nextSlot = sorted[0];
+            const now = new Date();
+            const diffMs = nextSlot - now;
+
+            if (diffMs <= 0) {
+                return '<div class="metric-detail">available now</div>';
+            }
+
+            const diffSecs = Math.ceil(diffMs / 1000);
+            if (diffSecs < 60) {
+                return `<div class="metric-detail">in ${diffSecs}s</div>`;
+            }
+            return `<div class="metric-detail">in ${Math.ceil(diffSecs / 60)}m</div>`;
+        }
+
+        function parseGenerator(generator) {
+            // Parse "Overpass API 0.7.62.8 e802775f" into structured data
+            const match = generator.match(/Overpass API ([\d.]+)\s*(\w+)?/);
+            if (match) {
+                return {
+                    full: generator,
+                    version: match[1],
+                    commit: match[2] || null
+                };
+            }
+            return { full: generator, version: generator, commit: null };
+        }
+
         function truncateText(text, maxLength = 500) {
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '... [truncated]';
         }
 
         function renderLogs() {
-            elements.logCount.textContent = state.logs.length;
+            // Filter logs if a server filter is active
+            const filteredLogs = state.logFilter
+                ? state.logs.filter(log => log.url.includes(state.logFilter.replace(/^https?:\/\//, '')))
+                : state.logs;
 
-            if (state.logs.length === 0) {
+            // Update count badge
+            if (state.logFilter) {
+                const displayFilter = state.logFilter.replace(/^https?:\/\//, '');
+                elements.logCount.textContent = `${filteredLogs.length}/${state.logs.length}`;
+                elements.logCount.title = `Filtered: ${displayFilter}`;
+            } else {
+                elements.logCount.textContent = state.logs.length;
+                elements.logCount.title = '';
+            }
+
+            // Clear existing entries and filter indicator
+            elements.logContent.querySelectorAll('.log-entry, .log-filter-bar').forEach(el => el.remove());
+
+            if (filteredLogs.length === 0) {
                 elements.logEmpty.style.display = 'block';
-                elements.logContent.querySelectorAll('.log-entry').forEach(el => el.remove());
+                elements.logEmpty.textContent = state.logFilter
+                    ? `No logs for ${state.logFilter.replace(/^https?:\/\//, '')}`
+                    : 'No API calls yet. Add a server or click a landmark to begin.';
                 return;
             }
 
             elements.logEmpty.style.display = 'none';
 
-            // Clear existing entries
-            elements.logContent.querySelectorAll('.log-entry').forEach(el => el.remove());
+            // Show filter bar if filtering
+            if (state.logFilter) {
+                const filterBar = document.createElement('div');
+                filterBar.className = 'log-filter-bar';
+                filterBar.innerHTML = `
+                    <span>Showing logs for: <strong>${state.logFilter.replace(/^https?:\/\//, '')}</strong></span>
+                    <button class="btn btn-secondary" onclick="clearLogFilter()" style="padding: 2px 8px; font-size: 0.7rem;">Clear Filter</button>
+                `;
+                elements.logContent.appendChild(filterBar);
+            }
 
             // Add log entries
-            state.logs.forEach((log, index) => {
+            filteredLogs.forEach((log, index) => {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
                 entry.innerHTML = `
@@ -1255,7 +1698,7 @@
         }
 
         // ========== Server Management ==========
-        function addServer(url) {
+        function addServer(url, name) {
             // Normalize URL
             url = url.trim().replace(/\/+$/, '');
             if (!url.startsWith('http')) {
@@ -1263,11 +1706,16 @@
             }
 
             // Check if already exists
-            if (state.servers.includes(url)) {
+            if (state.servers.some(s => s.url === url)) {
                 return false;
             }
 
-            state.servers.push(url);
+            // Generate name from URL if not provided
+            if (!name) {
+                name = url.replace(/^https?:\/\//, '').split('/')[0].split('.')[0];
+            }
+
+            state.servers.push({ url, name });
             saveState();
             renderServers();
             fetchAllStatuses();
@@ -1275,17 +1723,27 @@
         }
 
         function removeServer(url) {
-            state.servers = state.servers.filter(s => s !== url);
+            state.servers = state.servers.filter(s => s.url !== url);
             delete state.serverStatuses[url];
+            delete state.serverDataAge[url];
+            delete state.serverVersion[url];
             saveState();
             renderServers();
+        }
+
+        function getServerName(url) {
+            const server = state.servers.find(s => s.url === url);
+            return server ? server.name : url.replace(/^https?:\/\//, '').split('/')[0];
+        }
+
+        function getServerUrls() {
+            return state.servers.map(s => s.url);
         }
 
         // ========== Status Fetching ==========
         async function fetchServerStatus(serverUrl) {
             const startTime = performance.now();
             const statusUrl = `${serverUrl}/api/status`;
-            const timestampUrl = `${serverUrl}/api/timestamp`;
 
             const logEntry = {
                 timestamp: new Date(),
@@ -1297,27 +1755,11 @@
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), CONFIG.statusTimeout);
 
-                // Fetch status first
                 const statusResponse = await fetch(statusUrl, { signal: controller.signal });
                 clearTimeout(timeout);
 
                 const latency = Math.round(performance.now() - startTime);
                 const statusText = await statusResponse.text();
-
-                // Try to get data timestamp separately (may fail due to CORS)
-                let dataTimestamp = null;
-                try {
-                    const tsController = new AbortController();
-                    const tsTimeout = setTimeout(() => tsController.abort(), 5000);
-                    const timestampResponse = await fetch(timestampUrl, { signal: tsController.signal });
-                    clearTimeout(tsTimeout);
-                    if (timestampResponse.ok) {
-                        const timestampText = await timestampResponse.text();
-                        dataTimestamp = timestampText.trim();
-                    }
-                } catch (e) {
-                    // Timestamp endpoint may not support CORS, that's ok
-                }
 
                 // Add status to log
                 logEntry.status = statusResponse.status;
@@ -1334,9 +1776,7 @@
                     };
                 }
 
-                const result = parseStatus(statusText, latency);
-                result.dataTimestamp = dataTimestamp;
-                return result;
+                return parseStatus(statusText, latency);
             } catch (error) {
                 const latency = Math.round(performance.now() - startTime);
                 logEntry.latency = latency;
@@ -1348,6 +1788,57 @@
                     error: error.name === 'AbortError' ? 'Timeout' : error.message,
                     latency: latency
                 };
+            }
+        }
+
+        // Simple query to get version and data age info
+        async function fetchServerMetadata(serverUrl) {
+            const url = `${serverUrl}/api/interpreter`;
+            // Minimal query - just returns metadata without querying actual data
+            const query = '[out:json][timeout:5];node(1);out meta;';
+
+            const displayServerUrl = serverUrl.replace(/^https?:\/\//, '');
+            const logEntry = {
+                timestamp: new Date(),
+                method: 'POST',
+                url: `${displayServerUrl} - metadata check`,
+                requestBody: query
+            };
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), CONFIG.statusTimeout);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: `data=${encodeURIComponent(query)}`,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+
+                const latency = Math.round(performance.now());
+                const text = await response.text();
+
+                logEntry.status = response.status;
+                logEntry.latency = latency;
+                logEntry.responseBody = text;
+                addLog(logEntry);
+
+                if (!response.ok) return;
+
+                const data = JSON.parse(text);
+
+                // Extract metadata
+                if (data.osm3s?.timestamp_osm_base) {
+                    state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                }
+                if (data.generator) {
+                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                }
+            } catch (error) {
+                logEntry.error = error.message;
+                addLog(logEntry);
             }
         }
 
@@ -1363,7 +1854,8 @@
                 slotsAvailable: null,
                 slotsTotal: null,
                 runningQueries: [],
-                slotsUsed: 0
+                slotsUsed: 0,
+                nextSlotTimes: []  // Timestamps when slots become available
             };
 
             let inRunningQueries = false;
@@ -1394,8 +1886,18 @@
                         });
                     }
                 } else if (line.includes('Slot available after')) {
-                    // Count slots that are in cooldown
+                    // Count slots that are in cooldown and extract the timestamp
                     result.slotsUsed++;
+                    // Format: "Slot available after: 2024-01-15T14:30:00Z, after 25 seconds."
+                    const match = line.match(/Slot available after: ([^,]+)/);
+                    if (match) {
+                        try {
+                            const slotTime = new Date(match[1].trim());
+                            if (!isNaN(slotTime.getTime())) {
+                                result.nextSlotTimes.push(slotTime);
+                            }
+                        } catch (e) { /* ignore parse errors */ }
+                    }
                 }
             }
 
@@ -1414,13 +1916,20 @@
         }
 
         async function fetchAllStatuses() {
-            const promises = state.servers.map(async (url) => {
+            const promises = state.servers.map(async (server) => {
+                const url = server.url;
                 state.serverStatuses[url] = { status: 'loading' };
                 renderServerCard(url);
 
                 const status = await fetchServerStatus(url);
                 state.serverStatuses[url] = status;
                 renderServerCard(url);
+
+                // Also fetch metadata (version, data age) via a simple query
+                if (status.status !== 'error') {
+                    await fetchServerMetadata(url);
+                    renderServerCard(url);
+                }
             });
 
             await Promise.all(promises);
@@ -1467,9 +1976,14 @@ out count;`;
 
                 // Check for HTTP errors
                 if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    if (response.status === 429) errorMsg = 'Rate Limited';
+                    else if (response.status === 504) errorMsg = 'Gateway Timeout';
+                    else if (response.status === 503) errorMsg = 'Service Unavailable';
+                    else if (response.status === 502) errorMsg = 'Bad Gateway';
                     return {
                         status: 'error',
-                        error: `HTTP ${response.status}`,
+                        error: errorMsg,
                         latency: latency
                     };
                 }
@@ -1485,6 +1999,16 @@ out count;`;
                         latency: latency
                     };
                 }
+
+                // Extract and store metadata
+                if (data.osm3s?.timestamp_osm_base) {
+                    state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                }
+                // generator is at root level, not inside osm3s
+                if (data.generator) {
+                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                }
+                renderServerCard(serverUrl);
 
                 return {
                     status: 'ok',
@@ -1505,6 +2029,103 @@ out count;`;
             }
         }
 
+        // Batch query - all landmarks in one request
+        async function runBatchLandmarkTest(serverUrl) {
+            const startTime = performance.now();
+            const url = `${serverUrl}/api/interpreter`;
+
+            // Build a single query with all landmarks
+            let queryParts = CONFIG.landmarks.map(lm =>
+                `node(around:200,${lm.lat},${lm.lon})[${lm.query}]; out count;`
+            );
+            const query = `[out:json][timeout:30];\n${queryParts.join('\n')}`;
+
+            const displayServerUrl = serverUrl.replace(/^https?:\/\//, '');
+            const logEntry = {
+                timestamp: new Date(),
+                method: 'POST',
+                url: `${displayServerUrl} - All Landmarks (batch)`,
+                requestBody: query
+            };
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), CONFIG.queryTimeout);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: `data=${encodeURIComponent(query)}`,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+
+                const latency = Math.round(performance.now() - startTime);
+                const text = await response.text();
+
+                logEntry.status = response.status;
+                logEntry.latency = latency;
+                logEntry.responseBody = text;
+                addLog(logEntry);
+
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    if (response.status === 429) errorMsg = 'Rate Limited';
+                    else if (response.status === 504) errorMsg = 'Gateway Timeout';
+                    else if (response.status === 503) errorMsg = 'Service Unavailable';
+                    else if (response.status === 502) errorMsg = 'Bad Gateway';
+
+                    // Set error for all landmarks on this server
+                    CONFIG.landmarks.forEach(lm => {
+                        state.landmarkResults[lm.name][serverUrl] = { status: 'error', error: errorMsg, latency };
+                    });
+                    return;
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    CONFIG.landmarks.forEach(lm => {
+                        state.landmarkResults[lm.name][serverUrl] = { status: 'error', error: 'Invalid JSON', latency };
+                    });
+                    return;
+                }
+
+                // Extract metadata (timestamp from osm3s, generator at root)
+                if (data.osm3s?.timestamp_osm_base) {
+                    state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                }
+                if (data.generator) {
+                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                }
+                renderServerCard(serverUrl);
+
+                // Parse results - each landmark has one count element
+                CONFIG.landmarks.forEach((lm, index) => {
+                    const count = data.elements?.[index]?.tags?.total || 0;
+                    state.landmarkResults[lm.name][serverUrl] = {
+                        status: 'ok',
+                        latency,
+                        count
+                    };
+                });
+
+            } catch (error) {
+                const latency = Math.round(performance.now() - startTime);
+                logEntry.latency = latency;
+                logEntry.error = error.name === 'AbortError' ? 'Request timed out' : error.message;
+                addLog(logEntry);
+
+                const errorMsg = error.name === 'AbortError' ? 'Timeout' : error.message;
+                CONFIG.landmarks.forEach(lm => {
+                    state.landmarkResults[lm.name][serverUrl] = { status: 'error', error: errorMsg, latency };
+                });
+            }
+        }
+
         async function runSingleLandmarkTest(landmark) {
             if (state.servers.length === 0) {
                 alert('Please add at least one server first.');
@@ -1517,19 +2138,38 @@ out count;`;
             }
 
             // Set all servers to loading for this landmark
-            state.servers.forEach(serverUrl => {
-                state.landmarkResults[landmark.name][serverUrl] = { status: 'loading' };
+            state.servers.forEach(server => {
+                state.landmarkResults[landmark.name][server.url] = { status: 'loading' };
             });
             renderLandmarkCard(landmark);
 
-            // Run tests against all servers in parallel
-            const promises = state.servers.map(async (serverUrl) => {
-                const result = await runLandmarkTest(landmark, serverUrl);
-                state.landmarkResults[landmark.name][serverUrl] = result;
+            // Run tests against all servers in parallel (single landmark still uses individual queries)
+            const promises = state.servers.map(async (server) => {
+                const result = await enqueueRequest(server.url, () => runLandmarkTest(landmark, server.url));
+                state.landmarkResults[landmark.name][server.url] = result;
                 renderLandmarkCard(landmark);
             });
 
             await Promise.all(promises);
+        }
+
+        async function runSingleServerLandmarkTest(landmarkName, serverUrl) {
+            const landmark = CONFIG.landmarks.find(l => l.name === landmarkName);
+            if (!landmark) return;
+
+            // Initialize results object for this landmark if needed
+            if (!state.landmarkResults[landmark.name]) {
+                state.landmarkResults[landmark.name] = {};
+            }
+
+            // Set only this server to loading
+            state.landmarkResults[landmark.name][serverUrl] = { status: 'loading' };
+            renderLandmarkCard(landmark);
+
+            // Run test for just this server (queued to avoid rate limits)
+            const result = await enqueueRequest(serverUrl, () => runLandmarkTest(landmark, serverUrl));
+            state.landmarkResults[landmark.name][serverUrl] = result;
+            renderLandmarkCard(landmark);
         }
 
         async function runAllLandmarkTests() {
@@ -1541,23 +2181,16 @@ out count;`;
             // Initialize and set all to loading
             CONFIG.landmarks.forEach(lm => {
                 state.landmarkResults[lm.name] = {};
-                state.servers.forEach(serverUrl => {
-                    state.landmarkResults[lm.name][serverUrl] = { status: 'loading' };
+                state.servers.forEach(server => {
+                    state.landmarkResults[lm.name][server.url] = { status: 'loading' };
                 });
             });
             renderLandmarks();
 
-            // Run all tests in parallel (all landmarks x all servers)
-            const promises = [];
-            CONFIG.landmarks.forEach(landmark => {
-                state.servers.forEach(serverUrl => {
-                    promises.push(
-                        runLandmarkTest(landmark, serverUrl).then(result => {
-                            state.landmarkResults[landmark.name][serverUrl] = result;
-                            renderLandmarkCard(landmark);
-                        })
-                    );
-                });
+            // Run ONE batch query per server (all landmarks in single request)
+            const promises = state.servers.map(async (server) => {
+                await runBatchLandmarkTest(server.url);
+                renderLandmarks(); // Update all landmark cards for this server
             });
 
             await Promise.all(promises);
@@ -1571,12 +2204,12 @@ out count;`;
                 return;
             }
 
-            elements.serversGrid.style.display = 'flex';
+            elements.serversGrid.style.display = 'grid';
             elements.emptyState.style.display = 'none';
             elements.serversGrid.innerHTML = '';
 
-            state.servers.forEach(url => {
-                renderServerCard(url);
+            state.servers.forEach(server => {
+                renderServerCard(server.url);
             });
         }
 
@@ -1591,6 +2224,7 @@ out count;`;
                 elements.serversGrid.appendChild(card);
             }
 
+            const serverName = getServerName(url);
             const displayUrl = url.replace(/^https?:\/\//, '');
             const statusClass = status.status === 'ok' ? 'status-ok' :
                                status.status === 'warning' ? 'status-warning' :
@@ -1598,41 +2232,26 @@ out count;`;
 
             const isLoading = status.status === 'loading';
 
-            // Calculate data freshness from /api/timestamp
-            let dataLag = '--';
-            let dataStatus = '';
-            if (status.dataTimestamp) {
-                const dataTime = new Date(status.dataTimestamp);
-                const now = new Date();
-                const lagMs = now - dataTime;
-                const lagMinutes = Math.round(lagMs / 60000);
-
-                if (lagMinutes < 5) {
-                    dataLag = `${lagMinutes}m`;
-                    dataStatus = 'ok';
-                } else if (lagMinutes < 60) {
-                    dataLag = `${lagMinutes}m`;
-                    dataStatus = lagMinutes < 15 ? 'ok' : 'warning';
-                } else if (lagMinutes < 1440) {
-                    dataLag = `${Math.round(lagMinutes/60)}h`;
-                    dataStatus = lagMinutes < 360 ? 'warning' : 'error';
-                } else {
-                    dataLag = `${Math.round(lagMinutes/1440)}d`;
-                    dataStatus = 'error';
-                }
-            }
+            // Calculate slots in use
+            const slotsUsed = status.slotsTotal - status.slotsAvailable;
 
             // For error state, show a simplified card with error message
             if (status.status === 'error') {
                 card.innerHTML = `
                     <div class="server-card-header">
-                        <div class="server-url">
+                        <div class="server-url" title="${displayUrl}">
                             <span class="server-url-icon">&#128421;</span>
-                            <span>${displayUrl}</span>
+                            <span class="server-name">${serverName}</span>
+                            <span class="server-hostname">${displayUrl}</span>
                         </div>
-                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
-                            &#10005;
-                        </button>
+                        <div class="server-actions">
+                            <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
+                                &#128220;
+                            </button>
+                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
+                                &#10005;
+                            </button>
+                        </div>
                     </div>
                     <div class="server-error">
                         <span class="server-error-icon">&#10007;</span>
@@ -1647,44 +2266,57 @@ out count;`;
             const runningCount = status.runningQueries?.length || 0;
             const runningStatus = runningCount === 0 ? 'ok' : runningCount < 3 ? 'warning' : 'error';
 
+            // Data age from landmark tests
+            const dataAge = formatDataAge(state.serverDataAge[url]);
+            const dataAgeStatus = dataAge?.status || '';
+
+            // Version info from landmark tests
+            const versionInfo = state.serverVersion[url];
+
             card.innerHTML = `
                 <div class="server-card-header">
-                    <div class="server-url">
+                    <div class="server-url" title="${displayUrl}">
                         <span class="server-url-icon">&#128421;</span>
-                        <span>${displayUrl}</span>
+                        <span class="server-name">${serverName}</span>
+                        <span class="server-hostname">${displayUrl}</span>
                         ${status.endpoint ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
                     </div>
-                    <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
-                        &#10005;
-                    </button>
+                    <div class="server-actions">
+                        <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
+                            &#128220;
+                        </button>
+                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
+                            &#10005;
+                        </button>
+                    </div>
                 </div>
                 <div class="server-metrics">
                     <div class="metric-card ${statusClass}">
                         <div class="metric-label">Latency</div>
                         <div class="metric-value ${status.status}">
                             ${isLoading ? '<span class="loading"></span>' :
-                              status.latency ? status.latency : '--'}
-                        </div>
-                        <div class="metric-detail">
-                            ${isLoading ? 'Checking...' : status.status === 'ok' ? 'ms' : ''}
+                              status.latency ? status.latency + 'ms' : '--'}
                         </div>
                     </div>
-                    <div class="metric-card ${dataStatus ? `status-${dataStatus}` : ''}">
-                        <div class="metric-label">Data Age</div>
-                        <div class="metric-value ${dataStatus}">${dataLag}</div>
-                        <div class="metric-detail">${status.dataTimestamp ? new Date(status.dataTimestamp).toLocaleTimeString() : 'N/A'}</div>
-                    </div>
-                    <div class="metric-card ${status.slotsAvailable === 0 ? 'status-error' : status.slotsAvailable < status.slotsTotal ? 'status-warning' : ''}">
+                    <div class="metric-card ${status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : ''}" title="${formatNextSlotTooltip(status)}">
                         <div class="metric-label">Slots</div>
                         <div class="metric-value ${status.slotsAvailable === 0 ? 'error' : 'ok'}">
                             ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
-                        <div class="metric-detail">available</div>
+                        ${formatNextSlotDetail(status)}
                     </div>
                     <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}">
                         <div class="metric-label">Active</div>
                         <div class="metric-value ${runningStatus}">${runningCount}</div>
-                        <div class="metric-detail">queries</div>
+                    </div>
+                    <div class="metric-card ${dataAgeStatus ? 'status-' + dataAgeStatus : ''}" title="${state.serverDataAge[url] || 'Run a landmark test to check data age'}">
+                        <div class="metric-label">Data Age</div>
+                        <div class="metric-value ${dataAgeStatus}">${dataAge?.text || '--'}</div>
+                    </div>
+                    <div class="metric-card" title="${versionInfo?.full || 'Run a landmark test to check version'}">
+                        <div class="metric-label">Version</div>
+                        <div class="metric-value version-value">${versionInfo ? versionInfo.version : '--'}</div>
+                        ${versionInfo?.commit ? `<div class="metric-detail commit-hash">${versionInfo.commit}</div>` : ''}
                     </div>
                 </div>
             `;
@@ -1711,48 +2343,82 @@ out count;`;
 
             // Generate per-server results as compact dots
             let serverResultsHtml = '';
+            const multipleServers = state.servers.length > 1;
+
             if (state.servers.length > 0) {
-                serverResultsHtml = '<div class="landmark-servers">';
-                state.servers.forEach((serverUrl, index) => {
+                serverResultsHtml = `<div class="${multipleServers ? 'landmark-servers-row' : 'landmark-servers'}">`;
+                state.servers.forEach((server, index) => {
+                    const serverUrl = server.url;
+                    const serverName = server.name;
                     const result = results[serverUrl] || { status: 'pending' };
-                    const displayName = serverUrl.replace(/^https?:\/\//, '');
-                    const shortName = displayName.split('.')[0].substring(0, 3);
                     const isLoading = result.status === 'loading';
 
                     // Tooltip with full info
-                    const tooltip = isLoading ? `${displayName}: checking...` :
-                        result.status === 'ok' ? `${displayName}: ${result.latency}ms` :
-                        result.status === 'error' ? `${displayName}: ${result.error || 'failed'}` :
-                        `${displayName}: not tested`;
+                    const tooltip = isLoading ? `${serverName}: checking...` :
+                        result.status === 'ok' ? `${serverName}: ${result.latency}ms` :
+                        result.status === 'error' ? `${serverName}: ${result.error || 'failed'}` :
+                        `${serverName}: not tested`;
 
-                    // Content inside dot (formatted for compact display)
-                    const content = isLoading ? '...' :
-                        result.status === 'ok' ? formatLatency(result.latency) :
-                        result.status === 'error' ? '!' : '-';
+                    // Content inside dot - show server name for multiple servers
+                    const latencyText = result.status === 'ok' ? formatLatency(result.latency) :
+                        result.status === 'error' ? 'err' : '-';
 
-                    serverResultsHtml += `<div class="landmark-dot ${result.status}" title="${tooltip}">${content}</div>`;
+                    let content;
+                    if (isLoading) {
+                        content = multipleServers
+                            ? `${serverName}: <span class="dot-spinner"></span>`
+                            : '<span class="dot-spinner"></span>';
+                    } else {
+                        content = multipleServers ? `${serverName}: ${latencyText}` : latencyText;
+                    }
+
+                    serverResultsHtml += `<div class="landmark-dot ${result.status}" title="${tooltip}" data-server="${serverUrl}" data-landmark="${landmark.name}">${content}</div>`;
                 });
                 serverResultsHtml += '</div>';
             } else {
                 serverResultsHtml = '<span class="landmark-status-icon pending">-</span>';
             }
 
-            card.innerHTML = `
-                <div class="landmark-icon">${landmark.icon}</div>
-                <div class="landmark-info">
-                    <div class="landmark-name">${landmark.name}</div>
-                    <div class="landmark-location">${landmark.location}</div>
+            const showResultsInline = state.servers.length <= 1;
+
+            card.innerHTML = showResultsInline ? `
+                <div class="landmark-header">
+                    <div class="landmark-icon">${landmark.icon}</div>
+                    <div class="landmark-info">
+                        <div class="landmark-name">${landmark.name}</div>
+                        <div class="landmark-location">${landmark.location}</div>
+                    </div>
+                    <div class="landmark-status">
+                        ${serverResultsHtml}
+                    </div>
                 </div>
-                <div class="landmark-status">
-                    ${serverResultsHtml}
+            ` : `
+                <div class="landmark-header">
+                    <div class="landmark-icon">${landmark.icon}</div>
+                    <div class="landmark-info">
+                        <div class="landmark-name">${landmark.name}</div>
+                        <div class="landmark-location">${landmark.location}</div>
+                    </div>
                 </div>
+                ${serverResultsHtml}
             `;
+
+            // Add click handlers to dots for single-server testing
+            card.querySelectorAll('.landmark-dot[data-server]').forEach(dot => {
+                dot.style.cursor = 'pointer';
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click from firing
+                    const serverUrl = dot.getAttribute('data-server');
+                    const landmarkName = dot.getAttribute('data-landmark');
+                    runSingleServerLandmarkTest(landmarkName, serverUrl);
+                });
+            });
         }
 
         function renderPresetButtons() {
             elements.presetButtons.innerHTML = '';
             CONFIG.presetServers.forEach(preset => {
-                const isAdded = state.servers.includes(preset.url);
+                const isAdded = state.servers.some(s => s.url === preset.url);
                 const btn = document.createElement('button');
                 btn.className = 'preset-btn';
                 btn.disabled = isAdded;
@@ -1761,7 +2427,7 @@ out count;`;
                     <div class="preset-btn-desc">${isAdded ? 'Already added' : preset.desc}</div>
                 `;
                 btn.addEventListener('click', () => {
-                    addServer(preset.url);
+                    addServer(preset.url, preset.name);
                     renderPresetButtons();
                 });
                 elements.presetButtons.appendChild(btn);
@@ -1782,7 +2448,16 @@ out count;`;
 
         function closeModal() {
             elements.addServerModal.classList.remove('active');
+            elements.customServerName.value = '';
             elements.customServerUrl.value = '';
+        }
+
+        function openAboutModal() {
+            elements.aboutModal.classList.add('active');
+        }
+
+        function closeAboutModal() {
+            elements.aboutModal.classList.remove('active');
         }
 
         // ========== Event Listeners ==========
@@ -1790,9 +2465,21 @@ out count;`;
             elements.themeToggle.addEventListener('click', toggleTheme);
             elements.refreshAllBtn.addEventListener('click', refreshAll);
 
+            elements.autoRefreshSelect.addEventListener('change', (e) => {
+                setAutoRefreshInterval(parseInt(e.target.value));
+            });
+
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
             elements.closeModalBtn.addEventListener('click', closeModal);
+
+            elements.addAllServersBtn.addEventListener('click', () => {
+                CONFIG.presetServers.forEach(preset => {
+                    addServer(preset.url, preset.name);
+                });
+                renderPresetButtons();
+                closeModal();
+            });
 
             elements.addServerModal.addEventListener('click', (e) => {
                 if (e.target === elements.addServerModal) {
@@ -1800,11 +2487,22 @@ out count;`;
                 }
             });
 
+            elements.aboutBtn.addEventListener('click', openAboutModal);
+            elements.closeAboutBtn.addEventListener('click', closeAboutModal);
+
+            elements.aboutModal.addEventListener('click', (e) => {
+                if (e.target === elements.aboutModal) {
+                    closeAboutModal();
+                }
+            });
+
             elements.addCustomServerBtn.addEventListener('click', () => {
                 const url = elements.customServerUrl.value.trim();
+                const name = elements.customServerName.value.trim();
                 if (url) {
-                    if (addServer(url)) {
+                    if (addServer(url, name || null)) {
                         elements.customServerUrl.value = '';
+                        elements.customServerName.value = '';
                         closeModal();
                     } else {
                         alert('Server already added.');
@@ -1828,8 +2526,13 @@ out count;`;
 
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && elements.addServerModal.classList.contains('active')) {
-                    closeModal();
+                if (e.key === 'Escape') {
+                    if (elements.addServerModal.classList.contains('active')) {
+                        closeModal();
+                    }
+                    if (elements.aboutModal.classList.contains('active')) {
+                        closeAboutModal();
+                    }
                 }
             });
         }
@@ -1839,15 +2542,19 @@ out count;`;
             loadState();
             applyTheme();
 
+            // Set auto-refresh dropdown to saved value
+            elements.autoRefreshSelect.value = state.autoRefreshInterval;
+
             renderServers();
             renderLandmarks();
             renderLogs();
             setupEventListeners();
 
-            // Initial fetch
+            // Initial fetch and start auto-refresh
             if (state.servers.length > 0) {
                 fetchAllStatuses();
             }
+            startAutoRefresh();
         }
 
         // Start the app
