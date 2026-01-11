@@ -427,6 +427,19 @@
             box-shadow: 0 4px 20px var(--shadow-color);
         }
 
+        .server-card.draggable {
+            cursor: grab;
+        }
+
+        .server-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .server-card.drag-over {
+            border: 2px dashed var(--accent-primary);
+        }
+
         .server-card-header {
             display: flex;
             justify-content: space-between;
@@ -1327,6 +1340,12 @@
                     <span>Servers</span>
                 </h2>
                 <div class="section-actions">
+                    <select class="refresh-select" id="serverSortSelect" title="Sort servers by">
+                        <option value="custom">Sort: Custom</option>
+                        <option value="name">Sort: Name</option>
+                        <option value="latency">Sort: Latency</option>
+                        <option value="version">Sort: Version</option>
+                    </select>
                     <select class="refresh-select" id="autoRefreshSelect" title="Auto-refresh interval">
                         <option value="0">Auto: Off</option>
                         <option value="60000">Auto: 1min</option>
@@ -1519,6 +1538,7 @@
             autoRefreshInterval: 180000, // 3 minutes default
             landmarksCollapsed: true, // collapsed by default
             introDismissed: false, // show intro box for new users
+            serverSortOrder: 'custom', // custom, name, latency, version
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1575,6 +1595,7 @@
             themeToggle: document.getElementById('themeToggle'),
             refreshAllBtn: document.getElementById('refreshAllBtn'),
             autoRefreshSelect: document.getElementById('autoRefreshSelect'),
+            serverSortSelect: document.getElementById('serverSortSelect'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -1616,7 +1637,8 @@
                 theme: state.theme,
                 autoRefreshInterval: state.autoRefreshInterval,
                 landmarksCollapsed: state.landmarksCollapsed,
-                introDismissed: state.introDismissed
+                introDismissed: state.introDismissed,
+                serverSortOrder: state.serverSortOrder
             }));
         }
 
@@ -1643,6 +1665,7 @@
                     state.autoRefreshInterval = data.autoRefreshInterval ?? 180000;
                     state.landmarksCollapsed = data.landmarksCollapsed ?? true; // default collapsed
                     state.introDismissed = data.introDismissed ?? false; // show for new users
+                    state.serverSortOrder = data.serverSortOrder ?? 'custom';
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -2615,7 +2638,92 @@ out count;`;
             await Promise.all(promises);
         }
 
+        // ========== Drag and Drop for Server Reordering ==========
+        let draggedServerUrl = null;
+
+        function handleDragStart(e) {
+            draggedServerUrl = e.target.getAttribute('data-server-url');
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.server-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+            draggedServerUrl = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const card = e.target.closest('.server-card');
+            if (card && card.getAttribute('data-server-url') !== draggedServerUrl) {
+                card.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const card = e.target.closest('.server-card');
+            if (card) {
+                card.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetCard = e.target.closest('.server-card');
+            if (!targetCard) return;
+
+            const targetUrl = targetCard.getAttribute('data-server-url');
+            if (targetUrl === draggedServerUrl) return;
+
+            // Find indices
+            const fromIndex = state.servers.findIndex(s => s.url === draggedServerUrl);
+            const toIndex = state.servers.findIndex(s => s.url === targetUrl);
+
+            if (fromIndex === -1 || toIndex === -1) return;
+
+            // Reorder array
+            const [movedServer] = state.servers.splice(fromIndex, 1);
+            state.servers.splice(toIndex, 0, movedServer);
+
+            saveState();
+            renderServers();
+        }
+
         // ========== Rendering ==========
+        function getSortedServers() {
+            const servers = [...state.servers];
+
+            switch (state.serverSortOrder) {
+                case 'name':
+                    servers.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'latency':
+                    servers.sort((a, b) => {
+                        const latA = state.serverStatuses[a.url]?.latency ?? Infinity;
+                        const latB = state.serverStatuses[b.url]?.latency ?? Infinity;
+                        return latA - latB;
+                    });
+                    break;
+                case 'version':
+                    servers.sort((a, b) => {
+                        const verA = state.serverVersion[a.url]?.version || '';
+                        const verB = state.serverVersion[b.url]?.version || '';
+                        return compareVersions(verB, verA); // Descending (latest first)
+                    });
+                    break;
+                case 'custom':
+                default:
+                    // Keep original order (user-defined)
+                    break;
+            }
+
+            return servers;
+        }
+
         function renderServers() {
             if (state.servers.length === 0) {
                 elements.serversGrid.style.display = 'none';
@@ -2627,7 +2735,7 @@ out count;`;
             elements.emptyState.style.display = 'none';
             elements.serversGrid.innerHTML = '';
 
-            state.servers.forEach(server => {
+            getSortedServers().forEach(server => {
                 renderServerCard(server.url);
             });
         }
@@ -2641,6 +2749,25 @@ out count;`;
                 card.className = 'server-card fade-in';
                 card.setAttribute('data-server-url', url);
                 elements.serversGrid.appendChild(card);
+            }
+
+            // Enable drag-and-drop for custom sort order
+            if (state.serverSortOrder === 'custom') {
+                card.draggable = true;
+                card.classList.add('draggable');
+                card.ondragstart = handleDragStart;
+                card.ondragend = handleDragEnd;
+                card.ondragover = handleDragOver;
+                card.ondragleave = handleDragLeave;
+                card.ondrop = handleDrop;
+            } else {
+                card.draggable = false;
+                card.classList.remove('draggable');
+                card.ondragstart = null;
+                card.ondragend = null;
+                card.ondragover = null;
+                card.ondragleave = null;
+                card.ondrop = null;
             }
 
             const serverName = getServerName(url);
@@ -2897,6 +3024,12 @@ out count;`;
                 setAutoRefreshInterval(parseInt(e.target.value));
             });
 
+            elements.serverSortSelect.addEventListener('change', (e) => {
+                state.serverSortOrder = e.target.value;
+                saveState();
+                renderServers();
+            });
+
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
             elements.closeModalBtn.addEventListener('click', closeModal);
@@ -2983,8 +3116,9 @@ out count;`;
             loadState();
             applyTheme();
 
-            // Set auto-refresh dropdown to saved value
+            // Set dropdowns to saved values
             elements.autoRefreshSelect.value = state.autoRefreshInterval;
+            elements.serverSortSelect.value = state.serverSortOrder;
 
             // Apply landmarks collapsed state
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
