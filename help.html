@@ -338,6 +338,7 @@
                     <a href="#ordering" class="nav-link">Custom Ordering</a>
                     <a href="#sharing" class="nav-link">Sharing Config</a>
                     <a href="#export-import" class="nav-link">Export/Import</a>
+                    <a href="#auto-refresh" class="nav-link">Auto-Refresh</a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Reference</div>
@@ -497,6 +498,20 @@
                 <li><strong>Export Config</strong> &mdash; Download a JSON file with your complete configuration including history data</li>
                 <li><strong>Import Config</strong> &mdash; Load a previously exported configuration file</li>
             </ul>
+
+            <h2 id="auto-refresh">Auto-Refresh</h2>
+            <p>The monitor can automatically refresh server status at regular intervals. Use the <strong>Refresh</strong> dropdown to select an interval:</p>
+            <ul>
+                <li><strong>Off</strong> &mdash; Manual refresh only</li>
+                <li><strong>1 min</strong> &mdash; Every 60 seconds</li>
+                <li><strong>3 min</strong> &mdash; Every 3 minutes (default, recommended)</li>
+                <li><strong>10 min</strong> &mdash; Every 10 minutes</li>
+                <li><strong>30 min</strong> &mdash; Every 30 minutes</li>
+            </ul>
+            <div class="note">
+                <div class="note-title">Be considerate</div>
+                Public Overpass servers are a shared resource. Use 3 minutes or longer to avoid unnecessary load. Shorter intervals are best reserved for monitoring your own self-hosted servers.
+            </div>
 
             <h2 id="url-params">URL Parameters</h2>
             <p>Configure the monitor via URL query parameters:</p>
