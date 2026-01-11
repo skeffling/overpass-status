@@ -2211,7 +2211,7 @@
 
         function createLargeSparklineSVG(data, width, height) {
             if (!data || data.length < 2) return '';
-            const min = Math.min(...data);
+            const min = 0; // Always start Y-axis at 0
             const max = Math.max(...data);
             const range = max - min || 1;
             const padding = 4;
@@ -2239,13 +2239,12 @@
             if (!history || history.length < 2) return;
 
             const timestamps = state.serverHistoryTimestamps[serverUrl];
-            const min = Math.min(...history);
             const max = Math.max(...history);
             const unit = type === 'latency' ? 'ms' : '';
 
             elements.graphPopupTitle.textContent = type === 'latency' ? 'Latency History' : 'Active Queries History';
             elements.graphPopupMax.textContent = max + unit;
-            elements.graphPopupMin.textContent = min + unit;
+            elements.graphPopupMin.textContent = '0' + unit;
             elements.graphPopupSvg.innerHTML = createLargeSparklineSVG(history, 200, 80);
 
             // Set time labels
