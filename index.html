@@ -1510,9 +1510,12 @@
                     <select class="refresh-select" id="autoRefreshSelect" title="Auto-refresh interval">
                         <option value="0">Auto: Off</option>
                         <option value="60000">Auto: 1min</option>
+                        <option value="120000">Auto: 2min</option>
                         <option value="180000" selected>Auto: 3min</option>
+                        <option value="300000">Auto: 5min</option>
                         <option value="600000">Auto: 10min</option>
                         <option value="1800000">Auto: 30min</option>
+                        <option value="3600000">Auto: 1hr</option>
                     </select>
                     <button class="btn btn-secondary" id="refreshAllBtn">
                         <span>&#8635;</span>
@@ -1940,7 +1943,7 @@
             // Refresh interval in seconds
             if (params.has('refresh')) {
                 const refresh = parseInt(params.get('refresh')) * 1000;
-                if ([0, 60000, 180000, 600000, 1800000].includes(refresh)) {
+                if ([0, 60000, 120000, 180000, 300000, 600000, 1800000, 3600000].includes(refresh)) {
                     state.autoRefreshInterval = refresh;
                 }
             }
@@ -3872,24 +3875,52 @@ out count;`;
         }
 
         // ========== Server Config ==========
-        async function loadServerConfig() {
-            // Only load config if user has no saved servers and no URL param servers
-            const params = new URLSearchParams(window.location.search);
-            if (state.servers.length > 0 || params.has('servers')) {
-                return;
-            }
+        let minRefreshInterval = 0; // Minimum refresh interval from config (in ms)
 
+        async function loadServerConfig() {
             try {
                 const response = await fetch('config.json');
                 if (!response.ok) return;
 
                 const config = await response.json();
-                if (config.servers && Array.isArray(config.servers) && config.servers.length > 0) {
-                    state.servers = config.servers.filter(s => s.url && s.name);
-                    saveState();
+
+                // Apply default servers only if user has no saved servers and no URL param
+                const params = new URLSearchParams(window.location.search);
+                if (state.servers.length === 0 && !params.has('servers')) {
+                    if (config.servers && Array.isArray(config.servers) && config.servers.length > 0) {
+                        state.servers = config.servers.filter(s => s.url && s.name);
+                        saveState();
+                    }
+                }
+
+                // Apply minRefresh setting (always applies to restrict dropdown)
+                if (config.minRefresh && typeof config.minRefresh === 'number') {
+                    minRefreshInterval = config.minRefresh * 1000; // Convert to ms
+                    applyMinRefresh();
                 }
             } catch (e) {
                 // Config file doesn't exist or is invalid - that's fine
+            }
+        }
+
+        function applyMinRefresh() {
+            if (minRefreshInterval <= 0) return;
+
+            // Hide options faster than minRefresh
+            const options = elements.autoRefreshSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                const value = parseInt(options[i].value);
+                if (value > 0 && value < minRefreshInterval) {
+                    options[i].style.display = 'none';
+                }
+            }
+
+            // If current selection is below minimum, bump it up
+            if (state.autoRefreshInterval > 0 && state.autoRefreshInterval < minRefreshInterval) {
+                state.autoRefreshInterval = minRefreshInterval;
+                elements.autoRefreshSelect.value = minRefreshInterval;
+                saveState();
+                startAutoRefresh();
             }
         }
 

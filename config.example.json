@@ -1,10 +1,14 @@
 {
-  "_comment": "Copy this file to config.json to set default servers",
-  "_comment2": "The monitor will load these servers automatically on first visit",
-  "_comment3": "Users can still add/remove servers - their changes are saved locally",
+  "_comment": "Copy this file to config.json to configure defaults",
+  "_comment2": "The monitor will load these settings automatically on first visit",
+  "_comment3": "Users can still change settings - their changes are saved locally",
 
   "servers": [
     { "name": "Main", "url": "https://overpass-api.de" },
     { "name": "Z", "url": "https://z.overpass-api.de" }
-  ]
+  ],
+
+  "_comment4": "minRefresh: minimum refresh interval in seconds (0, 60, 120, 180, 300, 600, 1800, 3600)",
+  "_comment5": "Set this to limit load on your servers - users cannot select faster intervals",
+  "minRefresh": 180
 }

@@ -506,9 +506,12 @@
             <ul>
                 <li><strong>Off</strong> &mdash; Manual refresh only</li>
                 <li><strong>1 min</strong> &mdash; Every 60 seconds</li>
+                <li><strong>2 min</strong> &mdash; Every 2 minutes</li>
                 <li><strong>3 min</strong> &mdash; Every 3 minutes (default, recommended)</li>
+                <li><strong>5 min</strong> &mdash; Every 5 minutes</li>
                 <li><strong>10 min</strong> &mdash; Every 10 minutes</li>
                 <li><strong>30 min</strong> &mdash; Every 30 minutes</li>
+                <li><strong>1 hr</strong> &mdash; Every hour</li>
             </ul>
             <div class="note">
                 <div class="note-title">Be considerate</div>
@@ -534,7 +537,7 @@
                 <tr><td><code>servers</code></td><td>Comma-separated names or URLs</td><td><code>?servers=Main,Z,Kumi</code></td></tr>
                 <tr><td><code>layout</code></td><td><code>card</code>, <code>table</code></td><td><code>?layout=table</code></td></tr>
                 <tr><td><code>sort</code></td><td><code>custom</code>, <code>name</code>, <code>latency</code>, <code>version</code></td><td><code>?sort=latency</code></td></tr>
-                <tr><td><code>refresh</code></td><td>Seconds: <code>0</code>, <code>60</code>, <code>180</code>, <code>600</code>, <code>1800</code></td><td><code>?refresh=60</code></td></tr>
+                <tr><td><code>refresh</code></td><td>Seconds: <code>0</code>, <code>60</code>, <code>120</code>, <code>180</code>, <code>300</code>, <code>600</code>, <code>1800</code>, <code>3600</code></td><td><code>?refresh=300</code></td></tr>
                 <tr><td><code>graphs</code></td><td><code>on</code>, <code>off</code></td><td><code>?graphs=on</code></td></tr>
                 <tr><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td><code>?theme=dark</code></td></tr>
             </table>
@@ -559,16 +562,26 @@
             </table>
 
             <h2 id="server-config">Server Config File</h2>
-            <p>If you host your own instance of Overpass Status, you can set default servers by creating a <code>config.json</code> file in the same directory as <code>index.html</code>.</p>
-            <p>The config file is loaded automatically for new visitors who have no saved servers. Once a user adds or removes servers, their preferences are saved locally and the config file is ignored.</p>
-            <h3>Format</h3>
+            <p>If you host your own instance of Overpass Status, you can configure defaults by creating a <code>config.json</code> file in the same directory as <code>index.html</code>.</p>
+            <h3>Options</h3>
+            <table>
+                <tr><th>Option</th><th>Description</th></tr>
+                <tr><td><code>servers</code></td><td>Array of default servers for new visitors</td></tr>
+                <tr><td><code>minRefresh</code></td><td>Minimum refresh interval in seconds (restricts dropdown options)</td></tr>
+            </table>
+            <h3>Example</h3>
             <pre><code>{
   "servers": [
     { "name": "My Server", "url": "https://overpass.example.com" },
     { "name": "Backup", "url": "https://overpass2.example.com" }
-  ]
+  ],
+  "minRefresh": 180
 }</code></pre>
-            <p>Copy <code>config.example.json</code> to <code>config.json</code> and edit the server list.</p>
+            <p>Copy <code>config.example.json</code> to <code>config.json</code> and edit as needed.</p>
+            <div class="note">
+                <div class="note-title">Note</div>
+                Default servers only apply to new visitors. Once a user modifies their server list, their preferences are saved locally. The <code>minRefresh</code> setting always applies to prevent excessive load on your servers.
+            </div>
         </main>
     </div>
 
