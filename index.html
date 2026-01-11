@@ -3470,13 +3470,13 @@ out count;`;
                             ${getLatencySparkline(url, 80, 20)}
                         </div>` : ''}
                         ${state.showGraphs && cols.slots ? `<div class="metric metric-graph ${getSlotsSparkline(url) ? 'sparkline-hover' : ''}" ${getSlotsSparkline(url) ? `data-server="${url}" data-type="slots"` : ''}>
-                            ${getSlotsSparkline(url, 80, 20) || '--'}
+                            ${getSlotsSparkline(url, 80, 20)}
                         </div>` : ''}
                         ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                         ${state.showGraphs && cols.dataAge ? `<div class="metric metric-graph ${getDataAgeSparkline(url) ? 'sparkline-hover' : ''}" ${getDataAgeSparkline(url) ? `data-server="${url}" data-type="dataAge"` : ''}>
-                            ${getDataAgeSparkline(url, 80, 20) || '--'}
+                            ${getDataAgeSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
                     <div class="server-actions">
