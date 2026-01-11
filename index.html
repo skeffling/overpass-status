@@ -478,6 +478,12 @@
             color: var(--text-muted);
         }
 
+        .version-commit {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
         /* ========== Compact Row View ========== */
         .server-row {
             display: flex;
@@ -543,7 +549,7 @@
             color: var(--text-muted);
         }
 
-        .sparkline {
+        .sparkline-svg {
             display: inline-block;
             vertical-align: middle;
         }
@@ -1283,7 +1289,6 @@
             animation: pulse 2s ease-in-out infinite;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/mitjafelicijan/sparklines/sparklines.min.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -1475,6 +1480,14 @@
 
                 <p>View the source code on <a href="https://github.com/skeffling/overpass-status" target="_blank" rel="noopener">GitHub</a>.</p>
 
+                <div class="config-actions" style="margin: 1rem 0;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Share Configuration</strong></p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="configUrlInput" readonly style="flex: 1; padding: 0.5rem; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary);">
+                        <button class="btn btn-secondary" id="copyConfigUrlBtn">Copy Link</button>
+                    </div>
+                </div>
+
                 <div class="about-support">
                     <p>Find this tool useful? Consider buying me a coffee!</p>
                     <a href="https://ko-fi.com/pitstopper" target="_blank" rel="noopener" class="kofi-btn">
@@ -1657,7 +1670,9 @@
             mainHeader: document.getElementById('mainHeader'),
             serversSection: document.getElementById('serversSection'),
             serversHeader: document.getElementById('serversHeader'),
-            serversTitle: document.getElementById('serversTitle')
+            serversTitle: document.getElementById('serversTitle'),
+            configUrlInput: document.getElementById('configUrlInput'),
+            copyConfigUrlBtn: document.getElementById('copyConfigUrlBtn')
         };
 
         // ========== Storage ==========
@@ -1672,6 +1687,28 @@
                 serverLayout: state.serverLayout,
                 showGraphs: state.showGraphs
             }));
+        }
+
+        function saveHistory() {
+            localStorage.setItem('overpass-status-history', JSON.stringify({
+                serverLatencyHistory: state.serverLatencyHistory,
+                serverActiveHistory: state.serverActiveHistory,
+                serverSlotsHistory: state.serverSlotsHistory
+            }));
+        }
+
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem('overpass-status-history');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.serverLatencyHistory) state.serverLatencyHistory = data.serverLatencyHistory;
+                    if (data.serverActiveHistory) state.serverActiveHistory = data.serverActiveHistory;
+                    if (data.serverSlotsHistory) state.serverSlotsHistory = data.serverSlotsHistory;
+                }
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
         }
 
         function loadState() {
@@ -1709,6 +1746,93 @@
             if (!localStorage.getItem('overpass-status')) {
                 state.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
+        }
+
+        function applyUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Layout: card or table
+            if (params.has('layout')) {
+                const layout = params.get('layout');
+                if (['card', 'table'].includes(layout)) {
+                    state.serverLayout = layout;
+                }
+            }
+
+            // Sort: custom, name, latency, version
+            if (params.has('sort')) {
+                const sort = params.get('sort');
+                if (['custom', 'name', 'latency', 'version'].includes(sort)) {
+                    state.serverSortOrder = sort;
+                }
+            }
+
+            // Refresh interval in seconds
+            if (params.has('refresh')) {
+                const refresh = parseInt(params.get('refresh')) * 1000;
+                if ([0, 60000, 180000, 600000, 1800000].includes(refresh)) {
+                    state.autoRefreshInterval = refresh;
+                }
+            }
+
+            // Graphs: on or off
+            if (params.has('graphs')) {
+                state.showGraphs = params.get('graphs') === 'on';
+            }
+
+            // Theme: light or dark
+            if (params.has('theme')) {
+                const theme = params.get('theme');
+                if (['light', 'dark'].includes(theme)) {
+                    state.theme = theme;
+                }
+            }
+
+            // Servers: comma-separated list of URLs or preset names
+            if (params.has('servers')) {
+                const serverList = params.get('servers').split(',').map(s => s.trim()).filter(s => s);
+                if (serverList.length > 0) {
+                    state.servers = [];
+                    serverList.forEach(server => {
+                        // Check if it's a preset name
+                        const preset = CONFIG.presetServers.find(p =>
+                            p.name.toLowerCase() === server.toLowerCase() ||
+                            p.url.includes(server)
+                        );
+                        if (preset) {
+                            state.servers.push({ url: preset.url, name: preset.name });
+                        } else if (server.startsWith('http')) {
+                            // It's a URL
+                            const name = server.replace(/^https?:\/\//, '').split('/')[0].split('.')[0];
+                            state.servers.push({ url: server, name });
+                        }
+                    });
+                }
+            }
+        }
+
+        function generateConfigUrl() {
+            const params = new URLSearchParams();
+
+            // Add settings
+            if (state.serverLayout !== 'card') params.set('layout', state.serverLayout);
+            if (state.serverSortOrder !== 'custom') params.set('sort', state.serverSortOrder);
+            if (state.autoRefreshInterval !== 180000) params.set('refresh', state.autoRefreshInterval / 1000);
+            if (state.showGraphs) params.set('graphs', 'on');
+            if (state.theme !== 'light') params.set('theme', state.theme);
+
+            // Add servers
+            if (state.servers.length > 0) {
+                const serverNames = state.servers.map(s => {
+                    const preset = CONFIG.presetServers.find(p => p.url === s.url);
+                    return preset ? preset.name : s.url;
+                });
+                params.set('servers', serverNames.join(','));
+            }
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const queryString = params.toString();
+            return queryString ? `${baseUrl}?${queryString}` : baseUrl;
         }
 
         // ========== Auto Refresh ==========
@@ -1875,11 +1999,36 @@
             return Math.round(sum / history.length);
         }
 
+        function createSparklineSVG(data, width, height) {
+            if (!data || data.length < 2) return '';
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const padding = 2;
+            const w = width - padding * 2;
+            const h = height - padding * 2;
+
+            // Generate path
+            const points = data.map((val, i) => {
+                const x = padding + (i / (data.length - 1)) * w;
+                const y = padding + h - ((val - min) / range) * h;
+                return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+
+            const color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            return `<svg class="sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        }
+
         function getLatencySparkline(serverUrl, width = 80, height = 20) {
             const history = state.serverLatencyHistory[serverUrl];
             if (!history || history.length < 2) return '';
-            const points = history.join(',');
-            return `<div class="sparkline" data-sparkline="true" data-points="${points}" data-width="${width}" data-height="${height}" data-type="line" data-stroke-width="1" data-colors="${getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim()}"></div>`;
+            return createSparklineSVG(history, width, height);
+        }
+
+        function getActiveSparkline(serverUrl, width = 80, height = 20) {
+            const history = state.serverActiveHistory[serverUrl];
+            if (!history || history.length < 2) return '';
+            return createSparklineSVG(history, width, height);
         }
 
         function getAverageSlots(serverUrl) {
@@ -2443,6 +2592,9 @@
                     }
                 }
 
+                // Persist history data across page loads
+                saveHistory();
+
                 renderServerCard(url);
 
                 // Also fetch metadata (version, data age) via a simple query
@@ -2818,15 +2970,6 @@ out count;`;
             getSortedServers().forEach(server => {
                 renderServerCard(server.url);
             });
-
-            // Initialize sparklines after rendering
-            if (state.showGraphs && typeof window.sparklines !== 'undefined') {
-                setTimeout(() => {
-                    document.querySelectorAll('[data-sparkline="true"]').forEach(el => {
-                        el.dispatchEvent(new Event('update'));
-                    });
-                }, 10);
-            }
         }
 
         function applyCompactMode() {
@@ -2955,15 +3098,19 @@ out count;`;
                         </div>
                         <div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <span class="metric-label">Data Age</span>
-                            <span class="metric-value">${dataAge?.text || '--'}</span>
+                            <span class="metric-value ${dataAge?.status || ''}">${dataAge?.text || '--'}</span>
                         </div>
                         <div class="metric" title="${formatVersionTooltip(versionInfo)}">
                             <span class="metric-label">Version</span>
-                            <span class="metric-value">${versionInfo ? versionInfo.version : '--'}</span>
+                            <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>
                         ${state.showGraphs ? `<div class="metric metric-graph" title="Latency history">
-                            <span class="metric-label">Graph</span>
+                            <span class="metric-label">Latency</span>
                             ${getLatencySparkline(url, 80, 20)}
+                        </div>
+                        <div class="metric metric-graph" title="Active queries history">
+                            <span class="metric-label">Active</span>
+                            ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
                     <div class="server-actions">
@@ -2999,15 +3146,15 @@ out count;`;
                         <div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
                             <div class="metric-label">Active</div>
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
-                            ${getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : ''}
+                            ${state.showGraphs ? `<div class="sparkline-card">${getActiveSparkline(url, 60, 18)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
                         </div>
-                        <div class="metric-card" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                        <div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <div class="metric-label">Data Age</div>
                             <div class="metric-value">${dataAge?.text || '--'}</div>
                         </div>
-                        <div class="metric-card" title="${formatVersionTooltip(versionInfo)}">
+                        <div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
                             <div class="metric-label">Version</div>
-                            <div class="metric-value">${versionInfo ? versionInfo.version : '--'}</div>
+                            <div class="metric-value">${versionInfo ? versionInfo.version : '--'}${versionInfo?.commit ? ` <span class="version-commit">${versionInfo.commit.substring(0, 7)}</span>` : ''}</div>
                         </div>
                     </div>
                 `;
@@ -3143,6 +3290,7 @@ out count;`;
         }
 
         function openAboutModal() {
+            elements.configUrlInput.value = generateConfigUrl();
             elements.aboutModal.classList.add('active');
         }
 
@@ -3198,6 +3346,18 @@ out count;`;
 
             elements.aboutBtn.addEventListener('click', openAboutModal);
             elements.closeAboutBtn.addEventListener('click', closeAboutModal);
+            elements.copyConfigUrlBtn.addEventListener('click', () => {
+                elements.configUrlInput.select();
+                navigator.clipboard.writeText(elements.configUrlInput.value).then(() => {
+                    const btn = elements.copyConfigUrlBtn;
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = originalText; }, 1500);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    document.execCommand('copy');
+                });
+            });
 
             elements.exportConfigBtn.addEventListener('click', exportConfig);
             elements.importConfigBtn.addEventListener('click', () => {
@@ -3265,6 +3425,8 @@ out count;`;
             elements.versionLabel.textContent = `v${VERSION}`;
 
             loadState();
+            loadHistory();
+            applyUrlParams(); // URL params override saved state
             applyTheme();
 
             // Set dropdowns to saved values
