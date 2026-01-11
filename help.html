@@ -478,7 +478,12 @@
             </div>
             <div class="note">
                 <div class="note-title">Detection limitations</div>
-                Backend detection relies on the server's "Announced endpoint" field in its status response. Not all load balancing setups expose this information — some reverse proxies or load balancers don't pass through the backend identity. If no endpoint is shown, the server may still be load balanced, but the monitor cannot detect it.
+                Backend detection relies on the server's "Announced endpoint" field in its status response. This only works when the backend server identifies itself. Some load balancing methods cannot be detected:
+                <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                    <li><strong>DNS-based balancing</strong> — The domain resolves to multiple IP addresses. Each request may hit a different server, but they all appear as the same URL.</li>
+                    <li><strong>Reverse proxy</strong> — A load balancer sits in front of backend servers but doesn't pass through their identity.</li>
+                </ul>
+                If no endpoint is shown, the server may still be load balanced — you might notice this through fluctuating data age values.
             </div>
 
             <h2 id="landmarks">Landmark Tests</h2>
