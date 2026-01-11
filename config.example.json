@@ -1,0 +1,10 @@
+{
+  "_comment": "Copy this file to config.json to set default servers",
+  "_comment2": "The monitor will load these servers automatically on first visit",
+  "_comment3": "Users can still add/remove servers - their changes are saved locally",
+
+  "servers": [
+    { "name": "Main", "url": "https://overpass-api.de" },
+    { "name": "Z", "url": "https://z.overpass-api.de" }
+  ]
+}

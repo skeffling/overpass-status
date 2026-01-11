@@ -345,6 +345,7 @@
                     <div class="nav-section-title">Reference</div>
                     <a href="#url-params" class="nav-link">URL Parameters</a>
                     <a href="#preset-servers" class="nav-link">Preset Servers</a>
+                    <a href="#server-config" class="nav-link">Server Config File</a>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -556,6 +557,18 @@
                 <tr><td>Japan</td><td><code>overpass.osm.jp</code></td><td>Japan-based instance</td></tr>
                 <tr><td>Swiss</td><td><code>overpass.osm.ch</code></td><td>Switzerland-based instance</td></tr>
             </table>
+
+            <h2 id="server-config">Server Config File</h2>
+            <p>If you host your own instance of Overpass Status, you can set default servers by creating a <code>config.json</code> file in the same directory as <code>index.html</code>.</p>
+            <p>The config file is loaded automatically for new visitors who have no saved servers. Once a user adds or removes servers, their preferences are saved locally and the config file is ignored.</p>
+            <h3>Format</h3>
+            <pre><code>{
+  "servers": [
+    { "name": "My Server", "url": "https://overpass.example.com" },
+    { "name": "Backup", "url": "https://overpass2.example.com" }
+  ]
+}</code></pre>
+            <p>Copy <code>config.example.json</code> to <code>config.json</code> and edit the server list.</p>
         </main>
     </div>
 

@@ -3871,13 +3871,36 @@ out count;`;
             });
         }
 
+        // ========== Server Config ==========
+        async function loadServerConfig() {
+            // Only load config if user has no saved servers and no URL param servers
+            const params = new URLSearchParams(window.location.search);
+            if (state.servers.length > 0 || params.has('servers')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('config.json');
+                if (!response.ok) return;
+
+                const config = await response.json();
+                if (config.servers && Array.isArray(config.servers) && config.servers.length > 0) {
+                    state.servers = config.servers.filter(s => s.url && s.name);
+                    saveState();
+                }
+            } catch (e) {
+                // Config file doesn't exist or is invalid - that's fine
+            }
+        }
+
         // ========== Initialize ==========
-        function init() {
+        async function init() {
             // Display version
             elements.versionLabel.textContent = `v${VERSION}`;
 
             loadState();
             loadHistory();
+            await loadServerConfig(); // Load server config if no saved servers
             applyUrlParams(); // URL params override saved state
             applyTheme();
 
