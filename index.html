@@ -2240,11 +2240,16 @@
 
             const timestamps = state.serverHistoryTimestamps[serverUrl];
             const max = Math.max(...history);
-            const unit = type === 'latency' ? 'ms' : '';
 
             elements.graphPopupTitle.textContent = type === 'latency' ? 'Latency History' : 'Active Queries History';
-            elements.graphPopupMax.textContent = max + unit;
-            elements.graphPopupMin.textContent = '0' + unit;
+            if (type === 'latency') {
+                // Convert ms to whole seconds, round up for max
+                elements.graphPopupMax.textContent = Math.ceil(max / 1000) + 's';
+                elements.graphPopupMin.textContent = '0s';
+            } else {
+                elements.graphPopupMax.textContent = max;
+                elements.graphPopupMin.textContent = '0';
+            }
             elements.graphPopupSvg.innerHTML = createLargeSparklineSVG(history, 200, 80);
 
             // Set time labels
