@@ -3290,6 +3290,7 @@ out count;`;
                         ${cols.dataAge ? '<div class="metric">Data Age</div>' : ''}
                         ${cols.version ? '<div class="metric">Version</div>' : ''}
                         ${state.showGraphs && cols.latency ? '<div class="metric metric-graph">Latency</div>' : ''}
+                        ${state.showGraphs && cols.slots ? '<div class="metric metric-graph">Slots</div>' : ''}
                         ${state.showGraphs && cols.active ? '<div class="metric metric-graph">Active</div>' : ''}
                     </div>
                     <div class="server-actions">Updated</div>
