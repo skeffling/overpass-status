@@ -1304,7 +1304,7 @@
         </article>
 
         <!-- Header -->
-        <header class="header">
+        <header class="header" id="mainHeader">
             <div class="header-left">
                 <div class="logo">
                     <img src="icon.svg" alt="Overpass Status" class="logo-icon">
@@ -1326,13 +1326,13 @@
         </header>
 
         <!-- Servers Section -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">Servers</h2>
+        <section class="section" id="serversSection">
+            <div class="section-header" id="serversHeader">
+                <h2 class="section-title" id="serversTitle">Servers</h2>
                 <div class="section-actions">
                     <select class="refresh-select" id="layoutSelect" title="Layout style">
                         <option value="card">Layout: Card</option>
-                        <option value="compact">Layout: Compact</option>
+                        <option value="table">Layout: Table</option>
                     </select>
                     <select class="refresh-select" id="serverSortSelect" title="Sort servers by">
                         <option value="custom">Sort: Custom</option>
@@ -1536,7 +1536,7 @@
             landmarksCollapsed: true, // collapsed by default
             introDismissed: false, // show intro box for new users
             serverSortOrder: 'custom', // custom, name, latency, version
-            serverLayout: 'card', // card or compact
+            serverLayout: 'card', // card or table
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1629,7 +1629,11 @@
             landmarksCollapseIcon: document.getElementById('landmarksCollapseIcon'),
             landmarksSection: document.getElementById('landmarksSection'),
             introBox: document.getElementById('introBox'),
-            introClose: document.getElementById('introClose')
+            introClose: document.getElementById('introClose'),
+            mainHeader: document.getElementById('mainHeader'),
+            serversSection: document.getElementById('serversSection'),
+            serversHeader: document.getElementById('serversHeader'),
+            serversTitle: document.getElementById('serversTitle')
         };
 
         // ========== Storage ==========
@@ -2772,7 +2776,7 @@ out count;`;
                 return;
             }
 
-            const isCompact = state.serverLayout === 'compact';
+            const isCompact = state.serverLayout === 'table';
             elements.serversGrid.style.display = isCompact ? 'flex' : 'grid';
             elements.serversGrid.classList.toggle('compact-view', isCompact);
             elements.emptyState.style.display = 'none';
@@ -2783,9 +2787,26 @@ out count;`;
             });
         }
 
+        function applyCompactMode() {
+            const isCompact = state.serverLayout === 'table';
+
+            // Hide/show sections
+            elements.mainHeader.style.display = isCompact ? 'none' : '';
+            elements.landmarksSection.style.display = isCompact ? 'none' : '';
+            elements.logSection.style.display = isCompact ? 'none' : '';
+            elements.introBox.style.display = isCompact ? 'none' : '';
+
+            // Update servers title
+            if (isCompact) {
+                elements.serversTitle.innerHTML = `<img src="icon.svg" alt="" class="logo-icon" style="width:20px;height:20px;vertical-align:middle;margin-right:4px;">Overpass Status <span class="version-label">v${VERSION}</span>`;
+            } else {
+                elements.serversTitle.textContent = 'Servers';
+            }
+        }
+
         function renderServerCard(url) {
             const status = state.serverStatuses[url] || { status: 'pending' };
-            const isCompact = state.serverLayout === 'compact';
+            const isCompact = state.serverLayout === 'table';
             let el = document.querySelector(`[data-server-url="${url}"]`);
 
             if (!el) {
@@ -3102,6 +3123,7 @@ out count;`;
                 state.serverLayout = e.target.value;
                 saveState();
                 renderServers();
+                applyCompactMode();
             });
 
             elements.addServerBtn.addEventListener('click', openModal);
@@ -3207,6 +3229,7 @@ out count;`;
             elements.introBox.classList.toggle('hidden', state.introDismissed);
 
             renderServers();
+            applyCompactMode();
             renderLandmarks();
             renderLogs();
             setupEventListeners();
