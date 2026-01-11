@@ -1545,6 +1545,8 @@
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
             serverLatencyHistory: {}, // array of last N latency readings per server
+            serverSlotsHistory: {}, // array of last N slots available readings per server
+            serverActiveHistory: {}, // array of last N active query counts per server
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
             logs: [],
@@ -1841,6 +1843,20 @@
             if (!history || history.length < 5) return null;
             const sum = history.reduce((a, b) => a + b, 0);
             return Math.round(sum / history.length);
+        }
+
+        function getAverageSlots(serverUrl) {
+            const history = state.serverSlotsHistory[serverUrl];
+            if (!history || history.length < 5) return null;
+            const sum = history.reduce((a, b) => a + b, 0);
+            return (sum / history.length).toFixed(1);
+        }
+
+        function getAverageActive(serverUrl) {
+            const history = state.serverActiveHistory[serverUrl];
+            if (!history || history.length < 5) return null;
+            const sum = history.reduce((a, b) => a + b, 0);
+            return (sum / history.length).toFixed(1);
         }
 
         function formatRelativeTime(date) {
@@ -2367,6 +2383,29 @@
                     }
                 }
 
+                // Track slots history (keep last 20 readings)
+                if (status.slotsAvailable !== null && status.status !== 'error') {
+                    if (!state.serverSlotsHistory[url]) {
+                        state.serverSlotsHistory[url] = [];
+                    }
+                    state.serverSlotsHistory[url].push(status.slotsAvailable);
+                    if (state.serverSlotsHistory[url].length > 20) {
+                        state.serverSlotsHistory[url].shift();
+                    }
+                }
+
+                // Track active queries history (keep last 20 readings)
+                if (status.status !== 'error') {
+                    const activeCount = status.runningQueries ? status.runningQueries.length : 0;
+                    if (!state.serverActiveHistory[url]) {
+                        state.serverActiveHistory[url] = [];
+                    }
+                    state.serverActiveHistory[url].push(activeCount);
+                    if (state.serverActiveHistory[url].length > 20) {
+                        state.serverActiveHistory[url].shift();
+                    }
+                }
+
                 renderServerCard(url);
 
                 // Also fetch metadata (version, data age) via a simple query
@@ -2855,16 +2894,17 @@ out count;`;
                         </div>
                         ${getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : ''}
                     </div>
-                    <div class="metric-card ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : 'status-ok'}" title="${formatNextSlotTooltip(status)}">
+                    <div class="metric-card ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : 'status-ok'}" title="${formatNextSlotTooltip(status)}${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
                         <div class="metric-label">Slots</div>
                         <div class="metric-value ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : 'ok'}">
                             ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
-                        ${formatNextSlotDetail(status, url)}
+                        ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : formatNextSlotDetail(status, url)}
                     </div>
-                    <div class="metric-card status-${runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}">
+                    <div class="metric-card status-${runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
                         <div class="metric-label">Active</div>
                         <div class="metric-value ${runningStatus}">${runningCount}</div>
+                        ${getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : ''}
                     </div>
                     <div class="metric-card ${dataAgeStatus ? 'status-' + dataAgeStatus : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                         <div class="metric-label">Data Age</div>
