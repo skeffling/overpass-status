@@ -398,6 +398,51 @@
             border-color: var(--accent-primary);
         }
 
+        .columns-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .columns-btn {
+            min-width: auto;
+        }
+
+        .columns-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-xs);
+            z-index: 100;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .columns-menu.active {
+            display: block;
+        }
+
+        .columns-menu label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .columns-menu label:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .columns-menu input[type="checkbox"] {
+            cursor: pointer;
+        }
+
         /* ========== Server Grid (Card View) ========== */
         .servers-grid {
             display: grid;
@@ -567,6 +612,12 @@
 
         .sparkline-card {
             margin-top: 4px;
+            width: 100%;
+        }
+
+        .sparkline-card .sparkline-svg {
+            width: 100%;
+            height: 18px;
         }
 
         .sparkline-table {
@@ -1372,6 +1423,16 @@
                         <option value="off">Graphs: Off</option>
                         <option value="on">Graphs: On</option>
                     </select>
+                    <div class="columns-dropdown" id="columnsDropdown">
+                        <button class="refresh-select columns-btn" id="columnsBtn">Columns ▾</button>
+                        <div class="columns-menu" id="columnsMenu">
+                            <label><input type="checkbox" data-column="latency" checked> Latency</label>
+                            <label><input type="checkbox" data-column="slots" checked> Slots</label>
+                            <label><input type="checkbox" data-column="active" checked> Active</label>
+                            <label><input type="checkbox" data-column="dataAge" checked> Data Age</label>
+                            <label><input type="checkbox" data-column="version" checked> Version</label>
+                        </div>
+                    </div>
                     <select class="refresh-select" id="serverSortSelect" title="Sort servers by">
                         <option value="custom">Sort: Custom</option>
                         <option value="name">Sort: Name</option>
@@ -1584,6 +1645,7 @@
             serverSortOrder: 'custom', // custom, name, latency, version
             serverLayout: 'card', // card or table
             showGraphs: false, // show latency sparkline graphs
+            visibleColumns: { latency: true, slots: true, active: true, dataAge: true, version: true }, // table columns
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1646,6 +1708,9 @@
             serverSortSelect: document.getElementById('serverSortSelect'),
             layoutSelect: document.getElementById('layoutSelect'),
             graphsSelect: document.getElementById('graphsSelect'),
+            columnsDropdown: document.getElementById('columnsDropdown'),
+            columnsBtn: document.getElementById('columnsBtn'),
+            columnsMenu: document.getElementById('columnsMenu'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -1696,7 +1761,8 @@
                 introDismissed: state.introDismissed,
                 serverSortOrder: state.serverSortOrder,
                 serverLayout: state.serverLayout,
-                showGraphs: state.showGraphs
+                showGraphs: state.showGraphs,
+                visibleColumns: state.visibleColumns
             }));
         }
 
@@ -1748,6 +1814,9 @@
                     state.serverSortOrder = data.serverSortOrder ?? 'custom';
                     state.serverLayout = data.serverLayout ?? 'card';
                     state.showGraphs = data.showGraphs ?? false;
+                    if (data.visibleColumns) {
+                        state.visibleColumns = { ...state.visibleColumns, ...data.visibleColumns };
+                    }
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -2010,7 +2079,7 @@
             return Math.round(sum / history.length);
         }
 
-        function createSparklineSVG(data, width, height) {
+        function createSparklineSVG(data, width, height, responsive = false) {
             if (!data || data.length < 2) return '';
             const min = Math.min(...data);
             const max = Math.max(...data);
@@ -2027,19 +2096,20 @@
             }).join(' ');
 
             const color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-            return `<svg class="sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+            const sizeAttr = responsive ? `preserveAspectRatio="none"` : `width="${width}" height="${height}"`;
+            return `<svg class="sparkline-svg" ${sizeAttr} viewBox="0 0 ${width} ${height}"><path d="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         }
 
-        function getLatencySparkline(serverUrl, width = 80, height = 20) {
+        function getLatencySparkline(serverUrl, width = 80, height = 20, responsive = false) {
             const history = state.serverLatencyHistory[serverUrl];
             if (!history || history.length < 2) return '';
-            return createSparklineSVG(history, width, height);
+            return createSparklineSVG(history, width, height, responsive);
         }
 
-        function getActiveSparkline(serverUrl, width = 80, height = 20) {
+        function getActiveSparkline(serverUrl, width = 80, height = 20, responsive = false) {
             const history = state.serverActiveHistory[serverUrl];
             if (!history || history.length < 2) return '';
-            return createSparklineSVG(history, width, height);
+            return createSparklineSVG(history, width, height, responsive);
         }
 
         function getAverageSlots(serverUrl) {
@@ -2980,17 +3050,19 @@ out count;`;
 
             // Add table header for compact view
             if (isCompact) {
+                const cols = state.visibleColumns;
                 const header = document.createElement('div');
                 header.className = 'server-row server-row-header';
                 header.innerHTML = `
                     <div class="server-name-col">Server</div>
                     <div class="server-metrics">
-                        <div class="metric">Latency</div>
-                        <div class="metric">Slots</div>
-                        <div class="metric">Active</div>
-                        <div class="metric">Data Age</div>
-                        <div class="metric">Version</div>
-                        ${state.showGraphs ? `<div class="metric metric-graph">Latency</div><div class="metric metric-graph">Active</div>` : ''}
+                        ${cols.latency ? '<div class="metric">Latency</div>' : ''}
+                        ${cols.slots ? '<div class="metric">Slots</div>' : ''}
+                        ${cols.active ? '<div class="metric">Active</div>' : ''}
+                        ${cols.dataAge ? '<div class="metric">Data Age</div>' : ''}
+                        ${cols.version ? '<div class="metric">Version</div>' : ''}
+                        ${state.showGraphs && cols.latency ? '<div class="metric metric-graph">Latency</div>' : ''}
+                        ${state.showGraphs && cols.active ? '<div class="metric metric-graph">Active</div>' : ''}
                     </div>
                     <div class="server-actions">Updated</div>
                 `;
@@ -3105,31 +3177,32 @@ out count;`;
 
             // Normal state
             if (isCompact) {
+                const cols = state.visibleColumns;
                 el.innerHTML = `
                     <div class="server-name-col">
                         <div class="server-name">${serverName}</div>
                         <div class="server-hostname">${displayUrl}</div>
                     </div>
                     <div class="server-metrics">
-                        <div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
+                        ${cols.latency ? `<div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
                             <span class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</span>
-                        </div>
-                        <div class="metric" title="Available query slots${getAverageSlots(url) ? ' (avg: ' + getAverageSlots(url) + ')' : ''}">
+                        </div>` : ''}
+                        ${cols.slots ? `<div class="metric" title="Available query slots${getAverageSlots(url) ? ' (avg: ' + getAverageSlots(url) + ')' : ''}">
                             <span class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</span>
-                        </div>
-                        <div class="metric" title="Active queries${getAverageActive(url) ? ' (avg: ' + getAverageActive(url) + ')' : ''}">
+                        </div>` : ''}
+                        ${cols.active ? `<div class="metric" title="Active queries${getAverageActive(url) ? ' (avg: ' + getAverageActive(url) + ')' : ''}">
                             <span class="metric-value ${runningStatus}">${runningCount}</span>
-                        </div>
-                        <div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                        </div>` : ''}
+                        ${cols.dataAge ? `<div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <span class="metric-value ${dataAge?.status || ''}">${dataAge?.text || '--'}</span>
-                        </div>
-                        <div class="metric" title="${formatVersionTooltip(versionInfo)}">
+                        </div>` : ''}
+                        ${cols.version ? `<div class="metric" title="${formatVersionTooltip(versionInfo)}">
                             <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
-                        </div>
-                        ${state.showGraphs ? `<div class="metric metric-graph" title="Latency history">
+                        </div>` : ''}
+                        ${state.showGraphs && cols.latency ? `<div class="metric metric-graph" title="Latency history">
                             ${getLatencySparkline(url, 80, 20)}
-                        </div>
-                        <div class="metric metric-graph" title="Active queries history">
+                        </div>` : ''}
+                        ${state.showGraphs && cols.active ? `<div class="metric metric-graph" title="Active queries history">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
@@ -3156,7 +3229,7 @@ out count;`;
                         <div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
                             <div class="metric-label">Latency</div>
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
-                            ${state.showGraphs ? `<div class="sparkline-card">${getLatencySparkline(url, 60, 18)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
+                            ${state.showGraphs ? `<div class="sparkline-card">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
                         </div>
                         <div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
                             <div class="metric-label">Slots</div>
@@ -3166,7 +3239,7 @@ out count;`;
                         <div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
                             <div class="metric-label">Active</div>
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
-                            ${state.showGraphs ? `<div class="sparkline-card">${getActiveSparkline(url, 60, 18)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
+                            ${state.showGraphs ? `<div class="sparkline-card">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
                         </div>
                         <div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <div class="metric-label">Data Age</div>
@@ -3346,6 +3419,29 @@ out count;`;
                 renderServers();
             });
 
+            // Columns dropdown toggle
+            elements.columnsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.columnsMenu.classList.toggle('active');
+            });
+
+            // Close columns dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!elements.columnsDropdown.contains(e.target)) {
+                    elements.columnsMenu.classList.remove('active');
+                }
+            });
+
+            // Column checkbox changes
+            elements.columnsMenu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const column = e.target.dataset.column;
+                    state.visibleColumns[column] = e.target.checked;
+                    saveState();
+                    renderServers();
+                });
+            });
+
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
             elements.closeModalBtn.addEventListener('click', closeModal);
@@ -3454,6 +3550,12 @@ out count;`;
             elements.serverSortSelect.value = state.serverSortOrder;
             elements.layoutSelect.value = state.serverLayout;
             elements.graphsSelect.value = state.showGraphs ? 'on' : 'off';
+
+            // Set column checkboxes to saved values
+            elements.columnsMenu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const column = checkbox.dataset.column;
+                checkbox.checked = state.visibleColumns[column] !== false;
+            });
 
             // Apply landmarks collapsed state
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
