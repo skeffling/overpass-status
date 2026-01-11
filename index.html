@@ -1571,6 +1571,13 @@
                    '.' + String(date.getMilliseconds()).padStart(3, '0');
         }
 
+        function getLatencyStatus(latency) {
+            if (latency == null) return '';
+            if (latency < 500) return 'ok';
+            if (latency < 1000) return 'warning';
+            return 'error';
+        }
+
         function formatRelativeTime(date) {
             if (!date) return '';
             const now = new Date();
@@ -2459,9 +2466,9 @@ out count;`;
                     </div>
                 </div>
                 <div class="server-metrics">
-                    <div class="metric-card ${statusClass}" title="Response time to the status endpoint">
+                    <div class="metric-card ${status.status === 'error' ? 'status-error' : getLatencyStatus(status.latency) ? 'status-' + getLatencyStatus(status.latency) : ''}" title="Response time to the status endpoint\n< 500ms = fast, 500-1000ms = moderate, > 1000ms = slow">
                         <div class="metric-label">Latency</div>
-                        <div class="metric-value ${status.status}">
+                        <div class="metric-value ${status.status === 'error' ? 'error' : getLatencyStatus(status.latency)}">
                             ${isLoading ? '<span class="loading"></span>' :
                               status.latency ? status.latency + 'ms' : '--'}
                         </div>
