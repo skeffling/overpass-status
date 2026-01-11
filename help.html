@@ -339,6 +339,7 @@
                     <a href="#sharing" class="nav-link">Sharing Config</a>
                     <a href="#export-import" class="nav-link">Export/Import</a>
                     <a href="#auto-refresh" class="nav-link">Auto-Refresh</a>
+                    <a href="#api-log" class="nav-link">API Log</a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Reference</div>
@@ -512,6 +513,18 @@
                 <div class="note-title">Be considerate</div>
                 Public Overpass servers are a shared resource. Use 3 minutes or longer to avoid unnecessary load. Shorter intervals are best reserved for monitoring your own self-hosted servers.
             </div>
+
+            <h2 id="api-log">API Log</h2>
+            <p>The collapsible API Log panel at the bottom of the page shows all requests made to Overpass servers. Click the header to expand or collapse it.</p>
+            <p>Each log entry shows:</p>
+            <ul>
+                <li><strong>Timestamp</strong> &mdash; When the request was made</li>
+                <li><strong>Method</strong> &mdash; HTTP method (GET for status checks, POST for queries)</li>
+                <li><strong>URL</strong> &mdash; Server endpoint and request type</li>
+                <li><strong>Status</strong> &mdash; HTTP response code</li>
+                <li><strong>Latency</strong> &mdash; Response time in milliseconds</li>
+            </ul>
+            <p>Click any log entry to view the full request and response details. Use the <strong>Clear</strong> button to reset the log. You can also filter logs by clicking the log icon on a specific server card.</p>
 
             <h2 id="url-params">URL Parameters</h2>
             <p>Configure the monitor via URL query parameters:</p>
