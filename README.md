@@ -2,6 +2,8 @@
 
 A simple, client-side web application for monitoring the health and performance of Overpass API servers in real-time.
 
+![Screenshot](screenshot.png)
+
 ## Features
 
 - Real-time server status monitoring
