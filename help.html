@@ -416,6 +416,10 @@
                 <tr><td class="status-orange">Orange</td><td>30 min - 24 hours</td></tr>
                 <tr><td class="status-red">Red</td><td>&gt; 24 hours</td></tr>
             </table>
+            <div class="note">
+                <div class="note-title">Jumping values</div>
+                If data age fluctuates wildly (e.g., 1 min to 5 days), the server likely uses load balancing with multiple backends that have different data freshness. Each request may hit a different backend.
+            </div>
 
             <h2 id="version">Version</h2>
             <p>The Overpass API software version running on the server.</p>
