@@ -365,7 +365,7 @@
             <p>The site operator may have pre-configured default servers. These will appear automatically on your first visit. You can add more servers or remove the defaults as needed.</p>
             <p>Click <strong>Add Server</strong> to add servers to monitor. You can:</p>
             <ul>
-                <li>Select from preset public servers (Main, Z, LZ4, Kumi, Coffee, Japan, Swiss)</li>
+                <li>Select from preset public servers (Main, Z, LZ4, Coffee, Japan, Swiss)</li>
                 <li>Add a custom server by entering its URL</li>
                 <li>Add all preset servers at once</li>
             </ul>
@@ -543,7 +543,7 @@
             <p>Configure the monitor via URL query parameters:</p>
             <table>
                 <tr><th>Parameter</th><th>Values</th><th>Example</th></tr>
-                <tr><td><code>servers</code></td><td>Comma-separated names or URLs</td><td><code>?servers=Main,Z,Kumi</code></td></tr>
+                <tr><td><code>servers</code></td><td>Comma-separated names or URLs</td><td><code>?servers=Main,Z,Coffee</code></td></tr>
                 <tr><td><code>layout</code></td><td><code>card</code>, <code>table</code></td><td><code>?layout=table</code></td></tr>
                 <tr><td><code>sort</code></td><td><code>custom</code>, <code>name</code>, <code>latency</code>, <code>version</code></td><td><code>?sort=latency</code></td></tr>
                 <tr><td><code>refresh</code></td><td>Seconds: <code>0</code>, <code>60</code>, <code>120</code>, <code>180</code>, <code>300</code>, <code>600</code>, <code>1800</code>, <code>3600</code></td><td><code>?refresh=300</code></td></tr>
@@ -554,7 +554,7 @@
             <ul>
                 <li><code>?servers=Main,Z,LZ4</code> &mdash; Monitor the three main overpass-api.de servers</li>
                 <li><code>?servers=Main&amp;layout=table&amp;refresh=60</code> &mdash; Single server in compact table view, refreshing every minute</li>
-                <li><code>?servers=Main,Kumi,Japan&amp;graphs=on&amp;theme=dark</code> &mdash; Three servers with graphs enabled in dark mode</li>
+                <li><code>?servers=Main,Coffee,Japan&amp;graphs=on&amp;theme=dark</code> &mdash; Three servers with graphs enabled in dark mode</li>
                 <li><code>?servers=Main,Z&amp;sort=latency&amp;graphs=on</code> &mdash; Two servers sorted by fastest response, with graphs</li>
             </ul>
 
@@ -564,7 +564,6 @@
                 <tr><td>Main</td><td><code>overpass-api.de</code></td><td>Primary public instance</td></tr>
                 <tr><td>Z</td><td><code>z.overpass-api.de</code></td><td>Alternative endpoint</td></tr>
                 <tr><td>LZ4</td><td><code>lz4.overpass-api.de</code></td><td>Compressed responses</td></tr>
-                <tr><td>Kumi</td><td><code>overpass.kumi.systems</code></td><td>Community instance</td></tr>
                 <tr><td>Coffee</td><td><code>overpass.private.coffee</code></td><td>Community instance</td></tr>
                 <tr><td>Japan</td><td><code>overpass.osm.jp</code></td><td>Japan-based instance</td></tr>
                 <tr><td>Swiss</td><td><code>overpass.osm.ch</code></td><td>Switzerland-based instance</td></tr>
