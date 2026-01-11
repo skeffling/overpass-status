@@ -37,20 +37,30 @@ Simply open `index.html` in a web browser. No build step or server required.
 
 Works with public Overpass servers (like overpass-api.de) and self-hosted instances.
 
-## Default Servers (Self-Hosted)
+## Configuration (Self-Hosted)
 
-If you host your own instance, you can set default servers for new visitors by creating a `config.json` file:
+If you host your own instance, you can configure defaults by creating a `config.json` file:
 
 ```json
 {
   "servers": [
     { "name": "My Server", "url": "https://overpass.example.com" },
     { "name": "Backup", "url": "https://overpass2.example.com" }
-  ]
+  ],
+  "minRefresh": 180,
+  "allowCustomServers": true
 }
 ```
 
-Copy `config.example.json` to `config.json` and edit the server list. New visitors will see these servers by default. Once they modify the list, their preferences are saved locally.
+Copy `config.example.json` to `config.json` and edit as needed.
+
+| Option | Description |
+|--------|-------------|
+| `servers` | Default servers for new visitors |
+| `minRefresh` | Minimum refresh interval in seconds (e.g., 180 = 3 min) |
+| `allowCustomServers` | Set to `false` to prevent users adding their own servers |
+
+Default servers only apply to new visitors. The `minRefresh` and `allowCustomServers` restrictions apply to all users and are displayed in the About modal.
 
 ## Documentation
 
