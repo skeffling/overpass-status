@@ -476,6 +476,10 @@
                 <div class="note-title">Why monitor individual backends?</div>
                 Load-balanced servers may have backends with different data freshness or performance. Adding them individually lets you monitor each backend's health separately and identify problematic nodes.
             </div>
+            <div class="note">
+                <div class="note-title">Detection limitations</div>
+                Backend detection relies on the server's "Announced endpoint" field in its status response. Not all load balancing setups expose this information — some reverse proxies or load balancers don't pass through the backend identity. If no endpoint is shown, the server may still be load balanced, but the monitor cannot detect it.
+            </div>
 
             <h2 id="landmarks">Landmark Tests</h2>
             <p>Test server response by querying for famous landmarks around the world:</p>
