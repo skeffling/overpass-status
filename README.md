@@ -2,6 +2,8 @@
 
 A simple, client-side web application for monitoring the health and performance of Overpass API servers in real-time.
 
+I built this while setting up my own Overpass servers. Once they were running, I wanted a way to make sure everything was still looking good - updating itself properly and responding to queries.
+
 ![Card View](screenshot-single-card.png)
 
 ![Table View](screenshot-table-view.png)

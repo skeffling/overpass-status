@@ -629,6 +629,61 @@
             min-width: 80px;
         }
 
+        .sparkline-hover {
+            cursor: help;
+        }
+
+        .graph-popup {
+            display: none;
+            position: fixed;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .graph-popup.active {
+            display: block;
+        }
+
+        .graph-popup-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-primary);
+        }
+
+        .graph-popup-chart {
+            position: relative;
+        }
+
+        .graph-popup-axis {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .graph-popup-axis-y {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-right: 4px;
+            text-align: right;
+        }
+
+        .graph-popup-axis-x {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2px;
+            padding-left: 30px;
+        }
+
         .server-actions {
             display: flex;
             align-items: center;
@@ -1354,6 +1409,22 @@
     </style>
 </head>
 <body>
+    <!-- Graph popup for hover -->
+    <div class="graph-popup" id="graphPopup">
+        <div class="graph-popup-title" id="graphPopupTitle">Latency</div>
+        <div class="graph-popup-chart">
+            <div class="graph-popup-axis graph-popup-axis-y" id="graphPopupAxisY">
+                <span id="graphPopupMax">--</span>
+                <span id="graphPopupMin">--</span>
+            </div>
+            <div id="graphPopupSvg" style="margin-left: 30px;"></div>
+            <div class="graph-popup-axis graph-popup-axis-x">
+                <span>oldest</span>
+                <span>newest</span>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Intro Box for new users -->
         <article class="intro-box" id="introBox">
@@ -1744,7 +1815,12 @@
             serversHeader: document.getElementById('serversHeader'),
             serversTitle: document.getElementById('serversTitle'),
             configUrlInput: document.getElementById('configUrlInput'),
-            copyConfigUrlBtn: document.getElementById('copyConfigUrlBtn')
+            copyConfigUrlBtn: document.getElementById('copyConfigUrlBtn'),
+            graphPopup: document.getElementById('graphPopup'),
+            graphPopupTitle: document.getElementById('graphPopupTitle'),
+            graphPopupMax: document.getElementById('graphPopupMax'),
+            graphPopupMin: document.getElementById('graphPopupMin'),
+            graphPopupSvg: document.getElementById('graphPopupSvg')
         };
 
         // ========== Storage ==========
@@ -2126,6 +2202,62 @@
             if (!history || history.length < 5) return null;
             const sum = history.reduce((a, b) => a + b, 0);
             return (sum / history.length).toFixed(1);
+        }
+
+        function createLargeSparklineSVG(data, width, height) {
+            if (!data || data.length < 2) return '';
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const padding = 4;
+            const w = width - padding * 2;
+            const h = height - padding * 2;
+
+            const points = data.map((val, i) => {
+                const x = padding + (i / (data.length - 1)) * w;
+                const y = padding + h - ((val - min) / range) * h;
+                return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+
+            const color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        }
+
+        function showGraphPopup(event, serverUrl, type) {
+            const history = type === 'latency' ? state.serverLatencyHistory[serverUrl] : state.serverActiveHistory[serverUrl];
+            if (!history || history.length < 2) return;
+
+            const min = Math.min(...history);
+            const max = Math.max(...history);
+            const unit = type === 'latency' ? 'ms' : '';
+
+            elements.graphPopupTitle.textContent = type === 'latency' ? 'Latency History' : 'Active Queries History';
+            elements.graphPopupMax.textContent = max + unit;
+            elements.graphPopupMin.textContent = min + unit;
+            elements.graphPopupSvg.innerHTML = createLargeSparklineSVG(history, 200, 80);
+
+            const popup = elements.graphPopup;
+            popup.classList.add('active');
+
+            // Position popup near cursor
+            const rect = popup.getBoundingClientRect();
+            let left = event.clientX + 10;
+            let top = event.clientY + 10;
+
+            // Keep popup within viewport
+            if (left + rect.width > window.innerWidth) {
+                left = event.clientX - rect.width - 10;
+            }
+            if (top + rect.height > window.innerHeight) {
+                top = event.clientY - rect.height - 10;
+            }
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+        }
+
+        function hideGraphPopup() {
+            elements.graphPopup.classList.remove('active');
         }
 
         function formatRelativeTime(date) {
@@ -3232,10 +3364,10 @@ out count;`;
                         ${cols.version ? `<div class="metric" title="${formatVersionTooltip(versionInfo, url)}">
                             <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>` : ''}
-                        ${state.showGraphs && cols.latency ? `<div class="metric metric-graph" title="Latency history">
+                        ${state.showGraphs && cols.latency ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="latency" title="Latency history (hover for details)">
                             ${getLatencySparkline(url, 80, 20)}
                         </div>` : ''}
-                        ${state.showGraphs && cols.active ? `<div class="metric metric-graph" title="Active queries history">
+                        ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active" title="Active queries history (hover for details)">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
@@ -3262,7 +3394,7 @@ out count;`;
                         ${state.visibleColumns.latency ? `<div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
                             <div class="metric-label">Latency</div>
                             <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
-                            ${state.showGraphs ? `<div class="sparkline-card">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
+                            ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="latency">${getLatencySparkline(url, 100, 18, true)}</div>` : (getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : '')}
                         </div>` : ''}
                         ${state.visibleColumns.slots ? `<div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
                             <div class="metric-label">Slots</div>
@@ -3272,7 +3404,7 @@ out count;`;
                         ${state.visibleColumns.active ? `<div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
                             <div class="metric-label">Active</div>
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
-                            ${state.showGraphs ? `<div class="sparkline-card">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
+                            ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="active">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
                         </div>` : ''}
                         ${state.visibleColumns.dataAge ? `<div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <div class="metric-label">Data Age</div>
@@ -3555,6 +3687,47 @@ out count;`;
             elements.logToggle.addEventListener('click', toggleLogPane);
             elements.landmarksToggle.addEventListener('click', toggleLandmarks);
             elements.introClose.addEventListener('click', dismissIntro);
+
+            // Sparkline hover events (using event delegation)
+            document.addEventListener('mouseenter', (e) => {
+                const sparkline = e.target.closest('.sparkline-hover');
+                if (sparkline) {
+                    const server = sparkline.dataset.server;
+                    const type = sparkline.dataset.type;
+                    if (server && type) {
+                        showGraphPopup(e, server, type);
+                    }
+                }
+            }, true);
+
+            document.addEventListener('mouseleave', (e) => {
+                const sparkline = e.target.closest('.sparkline-hover');
+                if (sparkline) {
+                    hideGraphPopup();
+                }
+            }, true);
+
+            document.addEventListener('mousemove', (e) => {
+                if (elements.graphPopup.classList.contains('active')) {
+                    const sparkline = e.target.closest('.sparkline-hover');
+                    if (sparkline) {
+                        const popup = elements.graphPopup;
+                        const rect = popup.getBoundingClientRect();
+                        let left = e.clientX + 10;
+                        let top = e.clientY + 10;
+
+                        if (left + rect.width > window.innerWidth) {
+                            left = e.clientX - rect.width - 10;
+                        }
+                        if (top + rect.height > window.innerHeight) {
+                            top = e.clientY - rect.height - 10;
+                        }
+
+                        popup.style.left = left + 'px';
+                        popup.style.top = top + 'px';
+                    }
+                }
+            });
 
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
