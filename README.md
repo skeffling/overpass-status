@@ -37,6 +37,25 @@ Simply open `index.html` in a web browser. No build step or server required.
 
 Works with public Overpass servers (like overpass-api.de) and self-hosted instances.
 
+## Default Servers (Self-Hosted)
+
+If you host your own instance, you can set default servers for new visitors by creating a `config.json` file:
+
+```json
+{
+  "servers": [
+    { "name": "My Server", "url": "https://overpass.example.com" },
+    { "name": "Backup", "url": "https://overpass2.example.com" }
+  ]
+}
+```
+
+Copy `config.example.json` to `config.json` and edit the server list. New visitors will see these servers by default. Once they modify the list, their preferences are saved locally.
+
+## Documentation
+
+See [help.html](help.html) for full documentation.
+
 ## License
 
 MIT
