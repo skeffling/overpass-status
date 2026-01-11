@@ -31,39 +31,35 @@
 
         /* ========== CSS Variables ========== */
         :root {
-            /* Light theme (default) */
-            --bg-primary: #f0f4f8;
+            /* Light theme (default) - black on white */
+            --bg-primary: #ffffff;
             --bg-secondary: #ffffff;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-card-hover: rgba(255, 255, 255, 0.95);
-            --text-primary: #1a202c;
-            --text-secondary: #4a5568;
-            --text-muted: #718096;
-            --border-color: rgba(0, 0, 0, 0.08);
+            --bg-card: #ffffff;
+            --bg-card-hover: #f5f5f5;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
             --shadow-color: rgba(0, 0, 0, 0.1);
             --shadow-glow: rgba(0, 0, 0, 0.05);
 
-            /* Accent colors */
-            --accent-primary: #3b82f6;
-            --accent-primary-light: #60a5fa;
-            --accent-secondary: #8b5cf6;
+            /* Accent colors - muted */
+            --accent-primary: #000000;
+            --accent-primary-light: #333333;
+            --accent-secondary: #666666;
 
-            /* Status colors */
+            /* Status colors - keep for indicators */
             --status-ok: #22c55e;
-            --status-ok-bg: rgba(34, 197, 94, 0.1);
-            --status-ok-glow: rgba(34, 197, 94, 0.4);
+            --status-ok-bg: transparent;
+            --status-ok-glow: transparent;
             --status-warning: #f59e0b;
-            --status-warning-bg: rgba(245, 158, 11, 0.1);
-            --status-warning-glow: rgba(245, 158, 11, 0.4);
+            --status-warning-bg: transparent;
+            --status-warning-glow: transparent;
             --status-error: #ef4444;
-            --status-error-bg: rgba(239, 68, 68, 0.1);
-            --status-error-glow: rgba(239, 68, 68, 0.4);
-            --status-pending: #6b7280;
-            --status-pending-bg: rgba(107, 114, 128, 0.1);
-
-            /* Glassmorphism */
-            --glass-blur: 12px;
-            --glass-border: rgba(255, 255, 255, 0.3);
+            --status-error-bg: transparent;
+            --status-error-glow: transparent;
+            --status-pending: #999999;
+            --status-pending-bg: transparent;
 
             /* Transitions */
             --transition-fast: 0.15s ease;
@@ -78,25 +74,27 @@
             --spacing-xl: 1.1rem;
 
             /* Border radius */
-            --radius-sm: 6px;
-            --radius-md: 8px;
-            --radius-lg: 10px;
-            --radius-xl: 14px;
+            --radius-sm: 4px;
+            --radius-md: 4px;
+            --radius-lg: 4px;
+            --radius-xl: 4px;
         }
 
-        /* Dark theme */
+        /* Dark theme - white on black */
         [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --bg-card-hover: rgba(30, 41, 59, 0.95);
-            --text-primary: #f8fafc;
-            --text-secondary: #e2e8f0;
-            --text-muted: #b0bcc9;
-            --border-color: rgba(255, 255, 255, 0.12);
+            --bg-primary: #000000;
+            --bg-secondary: #000000;
+            --bg-card: #000000;
+            --bg-card-hover: #111111;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #999999;
+            --border-color: #333333;
             --shadow-color: rgba(0, 0, 0, 0.3);
             --shadow-glow: rgba(0, 0, 0, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            --accent-primary: #ffffff;
+            --accent-primary-light: #cccccc;
+            --accent-secondary: #999999;
         }
 
         /* ========== Base Styles ========== */
@@ -349,14 +347,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            border: 1px solid var(--text-primary);
         }
 
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            opacity: 0.8;
         }
 
         .btn-secondary {
@@ -401,149 +398,64 @@
             border-color: var(--accent-primary);
         }
 
-        /* ========== Server Cards ========== */
+        /* ========== Server Grid (Card View) ========== */
         .servers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
             gap: var(--spacing-sm);
             width: 100%;
         }
 
-        @media (max-width: 620px) {
+        .servers-grid.compact-view {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 540px) {
             .servers-grid {
                 grid-template-columns: 1fr;
             }
         }
 
+        /* ========== Card View ========== */
         .server-card {
             background: var(--bg-card);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             padding: var(--spacing-md);
-            transition: all var(--transition-normal);
-            box-shadow: 0 2px 15px var(--shadow-color);
-            overflow: hidden;
-            min-width: 0;
+            transition: all var(--transition-fast);
         }
 
         .server-card:hover {
             background: var(--bg-card-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px var(--shadow-color);
         }
 
-        .server-card.draggable {
-            cursor: grab;
-        }
+        .server-card.draggable { cursor: grab; }
+        .server-card.dragging { opacity: 0.5; cursor: grabbing; }
+        .server-card.drag-over { border: 2px dashed var(--accent-primary); }
 
-        .server-card.dragging {
-            opacity: 0.5;
-            cursor: grabbing;
-        }
-
-        .server-card.drag-over {
-            border: 2px dashed var(--accent-primary);
-        }
+        .server-card.status-ok { border-left: 3px solid var(--status-ok); }
+        .server-card.status-warning { border-left: 3px solid var(--status-warning); }
+        .server-card.status-error { border-left: 3px solid var(--status-error); }
 
         .server-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: var(--spacing-sm);
-            padding-bottom: var(--spacing-sm);
-            border-bottom: 1px solid var(--border-color);
         }
 
         .server-url {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: var(--spacing-xs);
+            flex: 1;
             min-width: 0;
-            flex: 1;
-            overflow: hidden;
         }
 
-        .server-name {
-            font-weight: 600;
-        }
-
-        .server-hostname {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: normal;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .server-url-icon {
-            color: var(--accent-primary);
-            font-size: 1rem;
-        }
-
-        .server-endpoint {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: normal;
-        }
-
-        .version-value {
-            font-size: 0.95rem;
-            color: var(--accent-primary);
-        }
-
-        .commit-hash {
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-        }
-
-        .server-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .server-last-updated {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-right: 4px;
-            white-space: nowrap;
-        }
-
-        .server-error {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-sm);
-            background: var(--status-error-bg);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--status-error);
-        }
-
-        .server-error-icon {
-            font-size: 1.2rem;
-            color: var(--status-error);
-        }
-
-        .server-error-text {
-            flex: 1;
-            font-size: 0.85rem;
-            color: var(--status-error);
-            font-weight: 500;
-        }
-
-        .server-error-latency {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .server-metrics {
+        .card-metrics {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: var(--spacing-sm);
@@ -551,50 +463,123 @@
 
         .metric-card {
             background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             padding: var(--spacing-sm);
             text-align: center;
-            transition: all var(--transition-fast);
-            border: 1px solid var(--border-color);
         }
 
-        .metric-card.status-ok {
-            border-color: var(--status-ok);
-            box-shadow: 0 0 12px var(--status-ok-glow);
+        .metric-card.status-ok { border-color: var(--status-ok); }
+        .metric-card.status-warning { border-color: var(--status-warning); }
+        .metric-card.status-error { border-color: var(--status-error); }
+
+        .metric-detail {
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
 
-        .metric-card.status-warning {
-            border-color: var(--status-warning);
-            box-shadow: 0 0 12px var(--status-warning-glow);
+        /* ========== Compact Row View ========== */
+        .server-row {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            gap: var(--spacing-md);
+            transition: background var(--transition-fast);
         }
 
-        .metric-card.status-error {
-            border-color: var(--status-error);
-            box-shadow: 0 0 20px var(--status-error-glow);
+        .server-row:last-child { border-bottom: none; }
+        .server-row:hover { background: var(--bg-card-hover); }
+        .server-row.draggable { cursor: grab; }
+        .server-row.dragging { opacity: 0.5; cursor: grabbing; }
+        .server-row.drag-over { background: var(--bg-card-hover); }
+
+        
+        .server-name-col {
+            min-width: 180px;
+            flex-shrink: 0;
+        }
+
+        .server-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .server-hostname {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .server-metrics {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            min-width: 70px;
         }
 
         .metric-label {
             font-size: 0.65rem;
-            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
             color: var(--text-muted);
-            margin-bottom: 2px;
         }
 
         .metric-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 2px;
+            font-weight: 600;
         }
 
         .metric-value.ok { color: var(--status-ok); }
         .metric-value.warning { color: var(--status-warning); }
         .metric-value.error { color: var(--status-error); }
 
-        .metric-detail {
+        .metric-avg {
             font-size: 0.7rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
+        }
+
+        .server-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        .server-last-updated {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        .server-error-msg {
+            color: var(--status-error);
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .server-error {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--status-error);
+        }
+
+        @media (max-width: 768px) {
+            .server-row {
+                flex-wrap: wrap;
+            }
+            .server-metrics {
+                width: 100%;
+                margin-top: var(--spacing-sm);
+            }
+            .card-metrics {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         /* ========== Add Server Modal ========== */
@@ -1041,8 +1026,8 @@
         }
 
         .log-badge {
-            background: var(--accent-primary);
-            color: white;
+            background: var(--text-primary);
+            color: var(--bg-primary);
             font-size: 0.7rem;
             padding: 2px 8px;
             border-radius: 10px;
@@ -1345,6 +1330,10 @@
             <div class="section-header">
                 <h2 class="section-title">Servers</h2>
                 <div class="section-actions">
+                    <select class="refresh-select" id="layoutSelect" title="Layout style">
+                        <option value="card">Layout: Card</option>
+                        <option value="compact">Layout: Compact</option>
+                    </select>
                     <select class="refresh-select" id="serverSortSelect" title="Sort servers by">
                         <option value="custom">Sort: Custom</option>
                         <option value="name">Sort: Name</option>
@@ -1547,6 +1536,7 @@
             landmarksCollapsed: true, // collapsed by default
             introDismissed: false, // show intro box for new users
             serverSortOrder: 'custom', // custom, name, latency, version
+            serverLayout: 'card', // card or compact
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
@@ -1607,6 +1597,7 @@
             refreshAllBtn: document.getElementById('refreshAllBtn'),
             autoRefreshSelect: document.getElementById('autoRefreshSelect'),
             serverSortSelect: document.getElementById('serverSortSelect'),
+            layoutSelect: document.getElementById('layoutSelect'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -1649,7 +1640,8 @@
                 autoRefreshInterval: state.autoRefreshInterval,
                 landmarksCollapsed: state.landmarksCollapsed,
                 introDismissed: state.introDismissed,
-                serverSortOrder: state.serverSortOrder
+                serverSortOrder: state.serverSortOrder,
+                serverLayout: state.serverLayout
             }));
         }
 
@@ -1677,6 +1669,7 @@
                     state.landmarksCollapsed = data.landmarksCollapsed ?? true; // default collapsed
                     state.introDismissed = data.introDismissed ?? false; // show for new users
                     state.serverSortOrder = data.serverSortOrder ?? 'custom';
+                    state.serverLayout = data.serverLayout ?? 'card';
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -2697,8 +2690,8 @@ out count;`;
 
         function handleDragEnd(e) {
             e.target.classList.remove('dragging');
-            document.querySelectorAll('.server-card').forEach(card => {
-                card.classList.remove('drag-over');
+            document.querySelectorAll('.server-card, .server-row').forEach(el => {
+                el.classList.remove('drag-over');
             });
             draggedServerUrl = null;
         }
@@ -2706,25 +2699,25 @@ out count;`;
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            const card = e.target.closest('.server-card');
-            if (card && card.getAttribute('data-server-url') !== draggedServerUrl) {
-                card.classList.add('drag-over');
+            const el = e.target.closest('.server-card, .server-row');
+            if (el && el.getAttribute('data-server-url') !== draggedServerUrl) {
+                el.classList.add('drag-over');
             }
         }
 
         function handleDragLeave(e) {
-            const card = e.target.closest('.server-card');
-            if (card) {
-                card.classList.remove('drag-over');
+            const el = e.target.closest('.server-card, .server-row');
+            if (el) {
+                el.classList.remove('drag-over');
             }
         }
 
         function handleDrop(e) {
             e.preventDefault();
-            const targetCard = e.target.closest('.server-card');
-            if (!targetCard) return;
+            const targetEl = e.target.closest('.server-card, .server-row');
+            if (!targetEl) return;
 
-            const targetUrl = targetCard.getAttribute('data-server-url');
+            const targetUrl = targetEl.getAttribute('data-server-url');
             if (targetUrl === draggedServerUrl) return;
 
             // Find indices
@@ -2779,7 +2772,9 @@ out count;`;
                 return;
             }
 
-            elements.serversGrid.style.display = 'grid';
+            const isCompact = state.serverLayout === 'compact';
+            elements.serversGrid.style.display = isCompact ? 'flex' : 'grid';
+            elements.serversGrid.classList.toggle('compact-view', isCompact);
             elements.emptyState.style.display = 'none';
             elements.serversGrid.innerHTML = '';
 
@@ -2790,138 +2785,166 @@ out count;`;
 
         function renderServerCard(url) {
             const status = state.serverStatuses[url] || { status: 'pending' };
-            let card = document.querySelector(`[data-server-url="${url}"]`);
+            const isCompact = state.serverLayout === 'compact';
+            let el = document.querySelector(`[data-server-url="${url}"]`);
 
-            if (!card) {
-                card = document.createElement('div');
-                card.className = 'server-card fade-in';
-                card.setAttribute('data-server-url', url);
-                elements.serversGrid.appendChild(card);
+            if (!el) {
+                el = document.createElement('div');
+                el.setAttribute('data-server-url', url);
+                elements.serversGrid.appendChild(el);
             }
+
+            // Set base class based on layout
+            el.className = isCompact ? 'server-row fade-in' : 'server-card fade-in';
 
             // Enable drag-and-drop for custom sort order
             if (state.serverSortOrder === 'custom') {
-                card.draggable = true;
-                card.classList.add('draggable');
-                card.ondragstart = handleDragStart;
-                card.ondragend = handleDragEnd;
-                card.ondragover = handleDragOver;
-                card.ondragleave = handleDragLeave;
-                card.ondrop = handleDrop;
-            } else {
-                card.draggable = false;
-                card.classList.remove('draggable');
-                card.ondragstart = null;
-                card.ondragend = null;
-                card.ondragover = null;
-                card.ondragleave = null;
-                card.ondrop = null;
+                el.draggable = true;
+                el.classList.add('draggable');
+                el.ondragstart = handleDragStart;
+                el.ondragend = handleDragEnd;
+                el.ondragover = handleDragOver;
+                el.ondragleave = handleDragLeave;
+                el.ondrop = handleDrop;
             }
 
             const serverName = getServerName(url);
             const displayUrl = url.replace(/^https?:\/\//, '');
-            const statusClass = status.status === 'ok' ? 'status-ok' :
-                               status.status === 'warning' ? 'status-warning' :
-                               status.status === 'error' ? 'status-error' : '';
-
             const isLoading = status.status === 'loading';
 
-            // Calculate slots in use (handle null values)
-            const slotsUsed = (status.slotsTotal != null && status.slotsAvailable != null)
-                ? status.slotsTotal - status.slotsAvailable
-                : 0;
+            // Calculate statuses
+            const latencyStatus = getLatencyStatus(status.latency);
+            const runningCount = status.runningQueries?.length || 0;
+            const runningStatus = runningCount < 5 ? 'ok' : runningCount < 10 ? 'warning' : 'error';
+            const slotsStatus = status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : status.slotsAvailable < status.slotsTotal ? 'warning' : 'ok';
+            const dataAge = formatDataAge(state.serverDataAge[url]);
+            const versionInfo = state.serverVersion[url];
 
-            // For error state, show a simplified card with error message
+            // Overall status for card border
+            let overallStatus = 'ok';
+            if (status.status === 'error' || latencyStatus === 'error' || runningStatus === 'error' || slotsStatus === 'error') {
+                overallStatus = 'error';
+            } else if (latencyStatus === 'warning' || runningStatus === 'warning' || slotsStatus === 'warning') {
+                overallStatus = 'warning';
+            }
+
+            // Add status class for card border (only for card view)
+            if (!isCompact) {
+                el.classList.add('status-' + (status.status === 'error' ? 'error' : overallStatus));
+            }
+
+            // Error state
             if (status.status === 'error') {
-                card.innerHTML = `
+                if (isCompact) {
+                    el.innerHTML = `
+                        <div class="server-name-col">
+                            <div class="server-name">${serverName}</div>
+                            <div class="server-hostname">${displayUrl}</div>
+                        </div>
+                        <div class="server-error-msg">${status.error || 'Connection failed'}</div>
+                        <div class="server-actions">
+                            <span class="server-last-updated">${formatRelativeTime(state.serverLastUpdated[url])}</span>
+                            <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
+                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                        </div>
+                    `;
+                } else {
+                    el.innerHTML = `
+                        <div class="server-card-header">
+                            <div class="server-url" title="${displayUrl}">
+                                <span class="server-name">${serverName}</span>
+                                <span class="server-hostname">${displayUrl}</span>
+                            </div>
+                            <div class="server-actions">
+                                <span class="server-last-updated">${formatRelativeTime(state.serverLastUpdated[url])}</span>
+                                <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
+                                <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                            </div>
+                        </div>
+                        <div class="server-error">${status.error || 'Connection failed'}</div>
+                    `;
+                }
+                return;
+            }
+
+            // Normal state
+            if (isCompact) {
+                el.innerHTML = `
+                    <div class="server-name-col">
+                        <div class="server-name">${serverName}</div>
+                        <div class="server-hostname">${displayUrl}</div>
+                    </div>
+                    <div class="server-metrics">
+                        <div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
+                            <span class="metric-label">Latency</span>
+                            <span class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</span>
+                            ${getAverageLatency(url) ? `<span class="metric-avg">avg ${getAverageLatency(url)}ms</span>` : ''}
+                        </div>
+                        <div class="metric" title="Available query slots${getAverageSlots(url) ? ' (avg: ' + getAverageSlots(url) + ')' : ''}">
+                            <span class="metric-label">Slots</span>
+                            <span class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</span>
+                            ${getAverageSlots(url) ? `<span class="metric-avg">avg ${getAverageSlots(url)}</span>` : ''}
+                        </div>
+                        <div class="metric" title="Active queries${getAverageActive(url) ? ' (avg: ' + getAverageActive(url) + ')' : ''}">
+                            <span class="metric-label">Active</span>
+                            <span class="metric-value ${runningStatus}">${runningCount}</span>
+                            ${getAverageActive(url) ? `<span class="metric-avg">avg ${getAverageActive(url)}</span>` : ''}
+                        </div>
+                        <div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                            <span class="metric-label">Data Age</span>
+                            <span class="metric-value">${dataAge?.text || '--'}</span>
+                        </div>
+                        <div class="metric" title="${formatVersionTooltip(versionInfo)}">
+                            <span class="metric-label">Version</span>
+                            <span class="metric-value">${versionInfo ? versionInfo.version : '--'}</span>
+                        </div>
+                    </div>
+                    <div class="server-actions">
+                        <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
+                        <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
+                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                    </div>
+                `;
+            } else {
+                el.innerHTML = `
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
                             <span class="server-name">${serverName}</span>
                             <span class="server-hostname">${displayUrl}</span>
                         </div>
                         <div class="server-actions">
-                            <span class="server-last-updated" data-server-url="${url}" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : 'Not yet updated'}">
-                                ${formatRelativeTime(state.serverLastUpdated[url])}
-                            </span>
-                            <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
-                                &#128220;
-                            </button>
-                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
-                                &#10005;
-                            </button>
+                            <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
+                            <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
+                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
                         </div>
                     </div>
-                    <div class="server-error">
-                        <span class="server-error-icon">&#10007;</span>
-                        <span class="server-error-text">${status.error || 'Connection failed'}</span>
-                        ${status.latency ? `<span class="server-error-latency">(${status.latency}ms)</span>` : ''}
+                    <div class="card-metrics">
+                        <div class="metric-card ${latencyStatus ? 'status-' + latencyStatus : ''}" title="Response time${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
+                            <div class="metric-label">Latency</div>
+                            <div class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</div>
+                            ${getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : ''}
+                        </div>
+                        <div class="metric-card ${slotsStatus ? 'status-' + slotsStatus : ''}" title="Available query slots${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
+                            <div class="metric-label">Slots</div>
+                            <div class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</div>
+                            ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : ''}
+                        </div>
+                        <div class="metric-card status-${runningStatus}" title="Active queries${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
+                            <div class="metric-label">Active</div>
+                            <div class="metric-value ${runningStatus}">${runningCount}</div>
+                            ${getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : ''}
+                        </div>
+                        <div class="metric-card" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                            <div class="metric-label">Data Age</div>
+                            <div class="metric-value">${dataAge?.text || '--'}</div>
+                        </div>
+                        <div class="metric-card" title="${formatVersionTooltip(versionInfo)}">
+                            <div class="metric-label">Version</div>
+                            <div class="metric-value">${versionInfo ? versionInfo.version : '--'}</div>
+                        </div>
                     </div>
                 `;
-                return;
             }
-
-            // Running queries status
-            const runningCount = status.runningQueries?.length || 0;
-            const runningStatus = runningCount < 5 ? 'ok' : runningCount < 10 ? 'warning' : 'error';
-
-            // Data age from landmark tests
-            const dataAge = formatDataAge(state.serverDataAge[url]);
-            const dataAgeStatus = dataAge?.status || '';
-
-            // Version info from landmark tests
-            const versionInfo = state.serverVersion[url];
-
-            card.innerHTML = `
-                <div class="server-card-header">
-                    <div class="server-url" title="${displayUrl}">
-                        <span class="server-name">${serverName}</span>
-                        <span class="server-hostname">${displayUrl}</span>
-                        ${status.endpoint && status.endpoint !== '(none)' && status.endpoint !== 'none' ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
-                    </div>
-                    <div class="server-actions">
-                        <span class="server-last-updated" data-server-url="${url}" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : 'Not yet updated'}">
-                            ${formatRelativeTime(state.serverLastUpdated[url])}
-                        </span>
-                        <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View server logs">
-                            &#128220;
-                        </button>
-                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
-                            &#10005;
-                        </button>
-                    </div>
-                </div>
-                <div class="server-metrics">
-                    <div class="metric-card ${status.status === 'error' ? 'status-error' : getLatencyStatus(status.latency) ? 'status-' + getLatencyStatus(status.latency) : ''}" title="Response time to the status endpoint\n< 500ms = fast, 500-1000ms = moderate, > 1000ms = slow${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
-                        <div class="metric-label">Latency</div>
-                        <div class="metric-value ${status.status === 'error' ? 'error' : getLatencyStatus(status.latency)}">
-                            ${isLoading ? '<span class="loading"></span>' :
-                              status.latency ? status.latency + 'ms' : '--'}
-                        </div>
-                        ${getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : ''}
-                    </div>
-                    <div class="metric-card ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : 'status-ok'}" title="${formatNextSlotTooltip(status)}${getAverageSlots(url) ? '\nAverage: ' + getAverageSlots(url) : ''}">
-                        <div class="metric-label">Slots</div>
-                        <div class="metric-value ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : 'ok'}">
-                            ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
-                        </div>
-                        ${getAverageSlots(url) ? `<div class="metric-detail">avg: ${getAverageSlots(url)}</div>` : formatNextSlotDetail(status, url)}
-                    </div>
-                    <div class="metric-card status-${runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}${getAverageActive(url) ? '\nAverage: ' + getAverageActive(url) : ''}">
-                        <div class="metric-label">Active</div>
-                        <div class="metric-value ${runningStatus}">${runningCount}</div>
-                        ${getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : ''}
-                    </div>
-                    <div class="metric-card ${dataAgeStatus ? 'status-' + dataAgeStatus : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
-                        <div class="metric-label">Data Age</div>
-                        <div class="metric-value ${dataAgeStatus}">${dataAge?.text || '--'}</div>
-                    </div>
-                    <div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
-                        <div class="metric-label">Version</div>
-                        <div class="metric-value version-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</div>
-                        ${versionInfo?.commit ? `<div class="metric-detail commit-hash">${versionInfo.commit}</div>` : ''}
-                    </div>
-                </div>
-            `;
         }
 
         function renderLandmarks() {
@@ -3075,6 +3098,12 @@ out count;`;
                 renderServers();
             });
 
+            elements.layoutSelect.addEventListener('change', (e) => {
+                state.serverLayout = e.target.value;
+                saveState();
+                renderServers();
+            });
+
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
             elements.closeModalBtn.addEventListener('click', closeModal);
@@ -3167,6 +3196,7 @@ out count;`;
             // Set dropdowns to saved values
             elements.autoRefreshSelect.value = state.autoRefreshInterval;
             elements.serverSortSelect.value = state.serverSortOrder;
+            elements.layoutSelect.value = state.serverLayout;
 
             // Apply landmarks collapsed state
             elements.landmarksGrid.classList.toggle('collapsed', state.landmarksCollapsed);
