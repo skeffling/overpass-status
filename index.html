@@ -1419,8 +1419,8 @@
             </div>
             <div id="graphPopupSvg" style="margin-left: 30px;"></div>
             <div class="graph-popup-axis graph-popup-axis-x">
-                <span>oldest</span>
-                <span>newest</span>
+                <span id="graphPopupTimeOldest">--</span>
+                <span id="graphPopupTimeNewest">--</span>
             </div>
         </div>
     </div>
@@ -1718,6 +1718,7 @@
             serverLatencyHistory: {}, // array of last N latency readings per server
             serverSlotsHistory: {}, // array of last N slots available readings per server
             serverActiveHistory: {}, // array of last N active query counts per server
+            serverHistoryTimestamps: {}, // array of timestamps for history data points
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
             serverVersionChangedAt: {}, // When each server's version last changed
@@ -1820,7 +1821,9 @@
             graphPopupTitle: document.getElementById('graphPopupTitle'),
             graphPopupMax: document.getElementById('graphPopupMax'),
             graphPopupMin: document.getElementById('graphPopupMin'),
-            graphPopupSvg: document.getElementById('graphPopupSvg')
+            graphPopupSvg: document.getElementById('graphPopupSvg'),
+            graphPopupTimeOldest: document.getElementById('graphPopupTimeOldest'),
+            graphPopupTimeNewest: document.getElementById('graphPopupTimeNewest')
         };
 
         // ========== Storage ==========
@@ -1843,6 +1846,7 @@
                 serverLatencyHistory: state.serverLatencyHistory,
                 serverActiveHistory: state.serverActiveHistory,
                 serverSlotsHistory: state.serverSlotsHistory,
+                serverHistoryTimestamps: state.serverHistoryTimestamps,
                 serverVersion: state.serverVersion,
                 serverDataAge: state.serverDataAge,
                 serverVersionChangedAt: state.serverVersionChangedAt
@@ -1857,6 +1861,7 @@
                     if (data.serverLatencyHistory) state.serverLatencyHistory = data.serverLatencyHistory;
                     if (data.serverActiveHistory) state.serverActiveHistory = data.serverActiveHistory;
                     if (data.serverSlotsHistory) state.serverSlotsHistory = data.serverSlotsHistory;
+                    if (data.serverHistoryTimestamps) state.serverHistoryTimestamps = data.serverHistoryTimestamps;
                     if (data.serverVersion) state.serverVersion = data.serverVersion;
                     if (data.serverDataAge) state.serverDataAge = data.serverDataAge;
                     if (data.serverVersionChangedAt) state.serverVersionChangedAt = data.serverVersionChangedAt;
@@ -2223,10 +2228,17 @@
             return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         }
 
+        function formatTimeShort(timestamp) {
+            if (!timestamp) return '--';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
         function showGraphPopup(event, serverUrl, type) {
             const history = type === 'latency' ? state.serverLatencyHistory[serverUrl] : state.serverActiveHistory[serverUrl];
             if (!history || history.length < 2) return;
 
+            const timestamps = state.serverHistoryTimestamps[serverUrl];
             const min = Math.min(...history);
             const max = Math.max(...history);
             const unit = type === 'latency' ? 'ms' : '';
@@ -2235,6 +2247,15 @@
             elements.graphPopupMax.textContent = max + unit;
             elements.graphPopupMin.textContent = min + unit;
             elements.graphPopupSvg.innerHTML = createLargeSparklineSVG(history, 200, 80);
+
+            // Set time labels
+            if (timestamps && timestamps.length >= 2) {
+                elements.graphPopupTimeOldest.textContent = formatTimeShort(timestamps[0]);
+                elements.graphPopupTimeNewest.textContent = formatTimeShort(timestamps[timestamps.length - 1]);
+            } else {
+                elements.graphPopupTimeOldest.textContent = 'oldest';
+                elements.graphPopupTimeNewest.textContent = 'newest';
+            }
 
             const popup = elements.graphPopup;
             popup.classList.add('active');
@@ -2812,6 +2833,15 @@
                     state.serverLatencyHistory[url].push(status.latency);
                     if (state.serverLatencyHistory[url].length > 20) {
                         state.serverLatencyHistory[url].shift();
+                    }
+
+                    // Track timestamps for history data
+                    if (!state.serverHistoryTimestamps[url]) {
+                        state.serverHistoryTimestamps[url] = [];
+                    }
+                    state.serverHistoryTimestamps[url].push(Date.now());
+                    if (state.serverHistoryTimestamps[url].length > 20) {
+                        state.serverHistoryTimestamps[url].shift();
                     }
                 }
 
