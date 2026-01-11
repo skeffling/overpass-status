@@ -1303,6 +1303,15 @@
                 logEntry.responseBody = text;
                 addLog(logEntry);
 
+                // Check for HTTP errors
+                if (!response.ok) {
+                    return {
+                        status: 'error',
+                        error: `HTTP ${response.status}`,
+                        latency: latency
+                    };
+                }
+
                 return parseStatus(text, latency);
             } catch (error) {
                 const latency = Math.round(performance.now() - startTime);
@@ -1406,6 +1415,15 @@ out count;`;
                 logEntry.latency = latency;
                 logEntry.responseBody = text;
                 addLog(logEntry);
+
+                // Check for HTTP errors
+                if (!response.ok) {
+                    return {
+                        status: 'error',
+                        error: `HTTP ${response.status}`,
+                        latency: latency
+                    };
+                }
 
                 // Try to parse JSON, handle errors gracefully
                 let data;
