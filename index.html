@@ -2444,7 +2444,7 @@ out count;`;
                         <span class="server-url-icon">&#128421;</span>
                         <span class="server-name">${serverName}</span>
                         <span class="server-hostname">${displayUrl}</span>
-                        ${status.endpoint ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
+                        ${status.endpoint && status.endpoint !== '(none)' && status.endpoint !== 'none' ? `<span class="server-endpoint">(${status.endpoint})</span>` : ''}
                     </div>
                     <div class="server-actions">
                         <span class="server-last-updated" data-server-url="${url}" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : 'Not yet updated'}">
