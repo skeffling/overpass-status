@@ -794,6 +794,16 @@
             font-style: italic;
         }
 
+        .config-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+        }
+
+        .config-buttons .btn {
+            flex: 1;
+        }
+
         /* ========== Landmark Tests ========== */
         .landmarks-grid {
             display: grid;
@@ -1418,6 +1428,18 @@
                 <p>If using your own Overpass instance, ensure CORS headers are configured:</p>
                 <code>Access-Control-Allow-Origin: *</code>
 
+                <h4>Export / Import Configuration</h4>
+                <p>Backup your server list or share it with others:</p>
+                <div class="config-buttons">
+                    <button class="btn btn-secondary" id="exportConfigBtn">
+                        <span>&#128190;</span> Export Config
+                    </button>
+                    <button class="btn btn-secondary" id="importConfigBtn">
+                        <span>&#128194;</span> Import Config
+                    </button>
+                    <input type="file" id="importConfigFile" accept=".json" style="display: none;">
+                </div>
+
                 <div class="about-support">
                     <p>Find this tool useful? Consider buying me a coffee!</p>
                     <a href="https://ko-fi.com/pitstopper" target="_blank" rel="noopener" class="kofi-btn">
@@ -1500,6 +1522,7 @@
             landmarkResults: {},
             serverStatuses: {},
             serverLastUpdated: {}, // when each server was last refreshed
+            serverLatencyHistory: {}, // array of last N latency readings per server
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
             logs: [],
@@ -1567,6 +1590,9 @@
             aboutBtn: document.getElementById('aboutBtn'),
             aboutModal: document.getElementById('aboutModal'),
             closeAboutBtn: document.getElementById('closeAboutBtn'),
+            exportConfigBtn: document.getElementById('exportConfigBtn'),
+            importConfigBtn: document.getElementById('importConfigBtn'),
+            importConfigFile: document.getElementById('importConfigFile'),
             runTestsBtn: document.getElementById('runTestsBtn'),
             logContent: document.getElementById('logContent'),
             logEmpty: document.getElementById('logEmpty'),
@@ -1653,6 +1679,76 @@
             startAutoRefresh();
         }
 
+        // ========== Export / Import ==========
+        function exportConfig() {
+            const config = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                servers: state.servers,
+                theme: state.theme,
+                autoRefreshInterval: state.autoRefreshInterval,
+                landmarksCollapsed: state.landmarksCollapsed
+            };
+
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `overpass-status-config-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importConfig(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const config = JSON.parse(e.target.result);
+
+                    // Validate config
+                    if (!config.servers || !Array.isArray(config.servers)) {
+                        alert('Invalid config file: missing servers array');
+                        return;
+                    }
+
+                    // Merge or replace servers
+                    const existingUrls = new Set(state.servers.map(s => s.url));
+                    let added = 0;
+
+                    config.servers.forEach(server => {
+                        if (server.url && !existingUrls.has(server.url)) {
+                            state.servers.push({
+                                url: server.url,
+                                name: server.name || server.url.replace(/^https?:\/\//, '').split('/')[0]
+                            });
+                            added++;
+                        }
+                    });
+
+                    // Optionally import other settings
+                    if (config.theme) state.theme = config.theme;
+                    if (config.autoRefreshInterval) state.autoRefreshInterval = config.autoRefreshInterval;
+                    if (config.landmarksCollapsed !== undefined) state.landmarksCollapsed = config.landmarksCollapsed;
+
+                    saveState();
+                    applyTheme();
+                    elements.autoRefreshSelect.value = state.autoRefreshInterval;
+                    renderServers();
+
+                    alert(`Imported ${added} new server(s). ${config.servers.length - added} already existed.`);
+
+                    if (state.servers.length > 0) {
+                        fetchAllStatuses();
+                    }
+                } catch (err) {
+                    alert('Failed to parse config file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // ========== Logging ==========
         function addLog(entry) {
             state.logs.unshift(entry);
@@ -1713,6 +1809,13 @@
             if (latency < 500) return 'ok';
             if (latency < 1000) return 'warning';
             return 'error';
+        }
+
+        function getAverageLatency(serverUrl) {
+            const history = state.serverLatencyHistory[serverUrl];
+            if (!history || history.length < 5) return null;
+            const sum = history.reduce((a, b) => a + b, 0);
+            return Math.round(sum / history.length);
         }
 
         function formatRelativeTime(date) {
@@ -2227,6 +2330,18 @@
                 const status = await fetchServerStatus(url);
                 state.serverStatuses[url] = status;
                 state.serverLastUpdated[url] = new Date();
+
+                // Track latency history (keep last 20 readings)
+                if (status.latency && status.status !== 'error') {
+                    if (!state.serverLatencyHistory[url]) {
+                        state.serverLatencyHistory[url] = [];
+                    }
+                    state.serverLatencyHistory[url].push(status.latency);
+                    if (state.serverLatencyHistory[url].length > 20) {
+                        state.serverLatencyHistory[url].shift();
+                    }
+                }
+
                 renderServerCard(url);
 
                 // Also fetch metadata (version, data age) via a simple query
@@ -2603,12 +2718,13 @@ out count;`;
                     </div>
                 </div>
                 <div class="server-metrics">
-                    <div class="metric-card ${status.status === 'error' ? 'status-error' : getLatencyStatus(status.latency) ? 'status-' + getLatencyStatus(status.latency) : ''}" title="Response time to the status endpoint\n< 500ms = fast, 500-1000ms = moderate, > 1000ms = slow">
+                    <div class="metric-card ${status.status === 'error' ? 'status-error' : getLatencyStatus(status.latency) ? 'status-' + getLatencyStatus(status.latency) : ''}" title="Response time to the status endpoint\n< 500ms = fast, 500-1000ms = moderate, > 1000ms = slow${getAverageLatency(url) ? '\nAverage: ' + getAverageLatency(url) + 'ms' : ''}">
                         <div class="metric-label">Latency</div>
                         <div class="metric-value ${status.status === 'error' ? 'error' : getLatencyStatus(status.latency)}">
                             ${isLoading ? '<span class="loading"></span>' :
                               status.latency ? status.latency + 'ms' : '--'}
                         </div>
+                        ${getAverageLatency(url) ? `<div class="metric-detail">avg: ${getAverageLatency(url)}ms</div>` : ''}
                     </div>
                     <div class="metric-card ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : 'status-ok'}" title="${formatNextSlotTooltip(status)}">
                         <div class="metric-label">Slots</div>
@@ -2801,6 +2917,17 @@ out count;`;
 
             elements.aboutBtn.addEventListener('click', openAboutModal);
             elements.closeAboutBtn.addEventListener('click', closeAboutModal);
+
+            elements.exportConfigBtn.addEventListener('click', exportConfig);
+            elements.importConfigBtn.addEventListener('click', () => {
+                elements.importConfigFile.click();
+            });
+            elements.importConfigFile.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    importConfig(e.target.files[0]);
+                    e.target.value = ''; // Reset for future imports
+                }
+            });
 
             elements.aboutModal.addEventListener('click', (e) => {
                 if (e.target === elements.aboutModal) {
