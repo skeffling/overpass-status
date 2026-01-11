@@ -2466,14 +2466,14 @@ out count;`;
                               status.latency ? status.latency + 'ms' : '--'}
                         </div>
                     </div>
-                    <div class="metric-card ${status.slotsAvailable !== null && status.slotsAvailable === 0 ? 'status-error' : status.slotsAvailable !== null && slotsUsed > 0 ? 'status-warning' : ''}" title="${formatNextSlotTooltip(status)}">
+                    <div class="metric-card ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : 'status-ok'}" title="${formatNextSlotTooltip(status)}">
                         <div class="metric-label">Slots</div>
                         <div class="metric-value ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : 'ok'}">
                             ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
                         ${formatNextSlotDetail(status, url)}
                     </div>
-                    <div class="metric-card ${runningStatus === 'ok' ? '' : 'status-' + runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}">
+                    <div class="metric-card status-${runningStatus}" title="Queries currently running on this server${runningCount > 0 ? '\n' + status.runningQueries.map(q => `PID ${q.pid}: started ${q.startTime}`).join('\n') : ''}">
                         <div class="metric-label">Active</div>
                         <div class="metric-value ${runningStatus}">${runningCount}</div>
                     </div>
