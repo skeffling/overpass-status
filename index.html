@@ -2249,13 +2249,15 @@
             elements.graphPopupSvg.innerHTML = createLargeSparklineSVG(history, 200, 80);
 
             // Set time labels
-            if (timestamps && timestamps.length >= 2) {
+            if (timestamps && timestamps.length >= 1) {
                 elements.graphPopupTimeOldest.textContent = formatTimeShort(timestamps[0]);
-                elements.graphPopupTimeNewest.textContent = formatTimeShort(timestamps[timestamps.length - 1]);
             } else {
-                elements.graphPopupTimeOldest.textContent = 'oldest';
-                elements.graphPopupTimeNewest.textContent = 'newest';
+                // Estimate oldest based on refresh interval and data points
+                const intervalMs = state.autoRefreshInterval * 1000;
+                const estimatedOldest = Date.now() - (intervalMs * (history.length - 1));
+                elements.graphPopupTimeOldest.textContent = formatTimeShort(estimatedOldest);
             }
+            elements.graphPopupTimeNewest.textContent = 'now';
 
             const popup = elements.graphPopup;
             popup.classList.add('active');
