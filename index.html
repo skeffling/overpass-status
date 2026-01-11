@@ -1278,41 +1278,63 @@
         // ========== Status Fetching ==========
         async function fetchServerStatus(serverUrl) {
             const startTime = performance.now();
-            const url = `${serverUrl}/api/status`;
+            const statusUrl = `${serverUrl}/api/status`;
+            const timestampUrl = `${serverUrl}/api/timestamp`;
+
             const logEntry = {
                 timestamp: new Date(),
                 method: 'GET',
-                url: url
+                url: statusUrl
             };
 
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), CONFIG.statusTimeout);
 
-                const response = await fetch(url, {
-                    signal: controller.signal
-                });
+                // Fetch both status and timestamp in parallel
+                const [statusResponse, timestampResponse] = await Promise.all([
+                    fetch(statusUrl, { signal: controller.signal }),
+                    fetch(timestampUrl, { signal: controller.signal }).catch(() => null)
+                ]);
                 clearTimeout(timeout);
 
                 const latency = Math.round(performance.now() - startTime);
-                const text = await response.text();
+                const statusText = await statusResponse.text();
 
-                // Add to log
-                logEntry.status = response.status;
+                // Get data timestamp if available
+                let dataTimestamp = null;
+                if (timestampResponse && timestampResponse.ok) {
+                    const timestampText = await timestampResponse.text();
+                    dataTimestamp = timestampText.trim();
+                    // Log timestamp fetch
+                    addLog({
+                        timestamp: new Date(),
+                        method: 'GET',
+                        url: timestampUrl,
+                        status: timestampResponse.status,
+                        latency: latency,
+                        responseBody: timestampText
+                    });
+                }
+
+                // Add status to log
+                logEntry.status = statusResponse.status;
                 logEntry.latency = latency;
-                logEntry.responseBody = text;
+                logEntry.responseBody = statusText;
                 addLog(logEntry);
 
                 // Check for HTTP errors
-                if (!response.ok) {
+                if (!statusResponse.ok) {
                     return {
                         status: 'error',
-                        error: `HTTP ${response.status}`,
+                        error: `HTTP ${statusResponse.status}`,
                         latency: latency
                     };
                 }
 
-                return parseStatus(text, latency);
+                const result = parseStatus(statusText, latency);
+                result.dataTimestamp = dataTimestamp;
+                return result;
             } catch (error) {
                 const latency = Math.round(performance.now() - startTime);
                 logEntry.latency = latency;
@@ -1549,23 +1571,26 @@ out count;`;
 
             const isLoading = status.status === 'loading';
 
-            // Calculate data freshness
+            // Calculate data freshness from /api/timestamp
             let dataLag = '--';
             let dataStatus = '';
-            if (status.currentTime) {
-                const serverTime = new Date(status.currentTime);
+            if (status.dataTimestamp) {
+                const dataTime = new Date(status.dataTimestamp);
                 const now = new Date();
-                const lagMs = now - serverTime;
+                const lagMs = now - dataTime;
                 const lagMinutes = Math.round(lagMs / 60000);
 
                 if (lagMinutes < 5) {
                     dataLag = `${lagMinutes}m`;
                     dataStatus = 'ok';
-                } else if (lagMinutes < 30) {
+                } else if (lagMinutes < 60) {
                     dataLag = `${lagMinutes}m`;
-                    dataStatus = 'warning';
+                    dataStatus = lagMinutes < 15 ? 'ok' : 'warning';
+                } else if (lagMinutes < 1440) {
+                    dataLag = `${Math.round(lagMinutes/60)}h`;
+                    dataStatus = lagMinutes < 360 ? 'warning' : 'error';
                 } else {
-                    dataLag = lagMinutes > 60 ? `${Math.round(lagMinutes/60)}h` : `${lagMinutes}m`;
+                    dataLag = `${Math.round(lagMinutes/1440)}d`;
                     dataStatus = 'error';
                 }
             }
