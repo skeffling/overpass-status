@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Overpass API Status Monitor</title>
+    <meta name="description" content="User guide for Overpass API Status Monitor. Learn how to monitor Overpass API servers, understand metrics like latency, slots, and data age, and configure your monitoring setup.">
+    <meta name="keywords" content="Overpass API, documentation, user guide, server monitoring, OpenStreetMap, OSM, API status, latency, query slots">
+    <meta name="author" content="Overpass Status Monitor">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Overpass API Status Monitor - Documentation">
+    <meta property="og:description" content="Complete guide to monitoring Overpass API servers. Understand metrics, configure servers, and optimize your monitoring setup.">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Overpass API Status Monitor - Documentation">
+    <meta name="twitter:description" content="User guide for monitoring Overpass API servers in real-time.">
+
+    <link rel="canonical" href="https://overpass-status.example.com/help.html">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f5f5f5;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --accent-primary: #0366d6;
+            --status-ok: #22c55e;
+            --status-warning: #f59e0b;
+            --status-error: #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-sidebar: #0d1117;
+            --text-primary: #e6edf3;
+            --text-secondary: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-color: #30363d;
+            --accent-primary: #58a6ff;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Layout */
+        .docs-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .sidebar-logo img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .sidebar-nav {
+            padding: 0 1rem;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 0 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.4rem 0.5rem;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-secondary);
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem 3rem;
+            max-width: 900px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        h2:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        code {
+            background: var(--bg-secondary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            padding: 0;
+            background: none;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        /* Status colors */
+        .status-green { color: var(--status-ok); font-weight: 600; }
+        .status-orange { color: var(--status-warning); font-weight: 600; }
+        .status-red { color: var(--status-error); font-weight: 600; }
+
+        /* Info boxes */
+        .note {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Screenshots */
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-sidebar);
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+
+    <div class="docs-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="sidebar-logo">
+                    <img src="icon.svg" alt="">
+                    Overpass Status
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="#overview" class="nav-link">Overview</a>
+                    <a href="#adding-servers" class="nav-link">Adding Servers</a>
+                    <a href="#layouts" class="nav-link">Layouts</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Metrics</div>
+                    <a href="#latency" class="nav-link">Latency</a>
+                    <a href="#slots" class="nav-link">Query Slots</a>
+                    <a href="#active" class="nav-link">Active Queries</a>
+                    <a href="#data-age" class="nav-link">Data Age</a>
+                    <a href="#version" class="nav-link">Version</a>
+                    <a href="#color-coding" class="nav-link">Color Coding</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Features</div>
+                    <a href="#graphs" class="nav-link">Sparkline Graphs</a>
+                    <a href="#landmarks" class="nav-link">Landmark Tests</a>
+                    <a href="#ordering" class="nav-link">Custom Ordering</a>
+                    <a href="#sharing" class="nav-link">Sharing Config</a>
+                    <a href="#export-import" class="nav-link">Export/Import</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Reference</div>
+                    <a href="#url-params" class="nav-link">URL Parameters</a>
+                    <a href="#preset-servers" class="nav-link">Preset Servers</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="back-link">&larr; Back to Monitor</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1 class="page-title">Overpass Status Monitor</h1>
+            <p class="page-subtitle">Monitor the health and performance of Overpass API servers in real-time.</p>
+
+            <h2 id="overview">Overview</h2>
+            <p>Overpass API Status Monitor is a client-side tool for monitoring Overpass API servers. It tracks server health, query performance, and data freshness without requiring any backend.</p>
+            <p>All data is stored in your browser's localStorage and persists across page reloads.</p>
+
+            <h2 id="adding-servers">Adding Servers</h2>
+            <p>Click <strong>Add Server</strong> to add servers to monitor. You can:</p>
+            <ul>
+                <li>Select from preset public servers (Main, Z, LZ4, Kumi, Coffee, Japan, Swiss)</li>
+                <li>Add a custom server by entering its URL</li>
+                <li>Add all preset servers at once</li>
+            </ul>
+            <p>Server URLs should point to the Overpass API endpoint (e.g., <code>https://overpass-api.de</code>).</p>
+
+            <h2 id="layouts">Layouts</h2>
+            <h3>Card View</h3>
+            <p>Detailed view showing all metrics for each server in a card format. Best for monitoring a small number of servers.</p>
+            <img src="screenshot-single-card.png" alt="Card view showing server metrics" class="screenshot">
+
+            <h3>Table View</h3>
+            <p>Compact view with servers in rows. Hides the header, landmarks section, and API log for focused monitoring. Best for many servers.</p>
+            <img src="screenshot-table-view.png" alt="Table view showing multiple servers" class="screenshot">
+            <p>Use the <strong>Columns</strong> dropdown to show/hide specific metrics.</p>
+
+            <h2 id="latency">Latency</h2>
+            <p>Round-trip time to fetch the server's status endpoint (<code>/api/status</code>). Measured in milliseconds.</p>
+            <table>
+                <tr><th>Status</th><th>Threshold</th></tr>
+                <tr><td class="status-green">Green</td><td>&lt; 500ms</td></tr>
+                <tr><td class="status-orange">Orange</td><td>500ms - 1000ms</td></tr>
+                <tr><td class="status-red">Red</td><td>&gt; 1000ms</td></tr>
+            </table>
+
+            <h2 id="slots">Query Slots</h2>
+            <p>Available query slots on the server. Each Overpass query uses one slot. When all slots are in use, new queries are queued.</p>
+            <table>
+                <tr><th>Status</th><th>Condition</th></tr>
+                <tr><td class="status-green">Green</td><td>Slots available</td></tr>
+                <tr><td class="status-orange">Orange</td><td>1-2 slots remaining</td></tr>
+                <tr><td class="status-red">Red</td><td>No slots available</td></tr>
+            </table>
+            <div class="note">
+                <div class="note-title">Note</div>
+                Not all servers report slot information. When unavailable, this metric is blank.
+            </div>
+
+            <h2 id="active">Active Queries</h2>
+            <p>Number of queries currently running on the server. High numbers indicate heavy server load.</p>
+            <table>
+                <tr><th>Status</th><th>Threshold</th></tr>
+                <tr><td class="status-green">Green</td><td>&lt; 5 queries</td></tr>
+                <tr><td class="status-orange">Orange</td><td>5 - 10 queries</td></tr>
+                <tr><td class="status-red">Red</td><td>&gt; 10 queries</td></tr>
+            </table>
+
+            <h2 id="data-age">Data Age</h2>
+            <p>How old the OpenStreetMap data is on the server. Based on the <code>timestamp_osm_base</code> value from the status endpoint.</p>
+            <table>
+                <tr><th>Status</th><th>Threshold</th></tr>
+                <tr><td class="status-green">Green</td><td>&lt; 30 minutes</td></tr>
+                <tr><td class="status-orange">Orange</td><td>30 min - 24 hours</td></tr>
+                <tr><td class="status-red">Red</td><td>&gt; 24 hours</td></tr>
+            </table>
+
+            <h2 id="version">Version</h2>
+            <p>The Overpass API software version running on the server.</p>
+            <table>
+                <tr><th>Status</th><th>Condition</th></tr>
+                <tr><td class="status-green">Green</td><td>Latest version among monitored servers</td></tr>
+                <tr><td class="status-orange">Orange</td><td>Behind latest version</td></tr>
+            </table>
+            <p>Card view shows the short git commit hash and time since last version upgrade.</p>
+
+            <h2 id="color-coding">Color Coding</h2>
+            <p>Each metric uses color to indicate status:</p>
+            <ul>
+                <li><span class="status-green">Green</span> &mdash; Healthy, no issues</li>
+                <li><span class="status-orange">Orange</span> &mdash; Warning, monitor closely</li>
+                <li><span class="status-red">Red</span> &mdash; Issue detected, may affect queries</li>
+            </ul>
+            <p>In card view, the left border color reflects the worst status among all metrics.</p>
+
+            <h2 id="graphs">Sparkline Graphs</h2>
+            <p>Enable graphs via <strong>Graphs: On</strong> dropdown. Sparklines appear for:</p>
+            <ul>
+                <li>Latency history</li>
+                <li>Query slots history</li>
+                <li>Active queries history</li>
+                <li>Data age history</li>
+            </ul>
+            <p>Hover over any graph to see a larger popup with:</p>
+            <ul>
+                <li>Y-axis scale (ms/seconds for latency, count for others, adaptive units for data age)</li>
+                <li>X-axis timestamps (oldest to newest)</li>
+            </ul>
+            <p>History stores the last 100 data points per server. Sparklines display the most recent 20 points. Data persists across page reloads.</p>
+
+            <h2 id="landmarks">Landmark Tests</h2>
+            <p>Test server response by querying for famous landmarks around the world:</p>
+            <ul>
+                <li>Eiffel Tower (Paris)</li>
+                <li>Statue of Liberty (New York)</li>
+                <li>Sydney Opera House</li>
+                <li>Christ the Redeemer (Rio)</li>
+                <li>Table Mountain (Cape Town)</li>
+                <li>Tokyo Tower</li>
+                <li>Taj Mahal (Agra)</li>
+                <li>Big Ben (London)</li>
+                <li>Great Wall (Beijing)</li>
+                <li>Burj Khalifa (Dubai)</li>
+            </ul>
+            <p>Click <strong>Run Tests</strong> to query all servers, or click a landmark card to test just that location.</p>
+
+            <h2 id="ordering">Custom Ordering</h2>
+            <p>In card view, drag and drop server cards to reorder them. Your custom order is saved and persists across reloads.</p>
+            <p>Use the <strong>Sort</strong> dropdown to sort by:</p>
+            <ul>
+                <li><strong>Custom</strong> &mdash; Your drag-and-drop order</li>
+                <li><strong>Name</strong> &mdash; Alphabetical</li>
+                <li><strong>Latency</strong> &mdash; Fastest first</li>
+                <li><strong>Version</strong> &mdash; Newest version first</li>
+            </ul>
+
+            <h2 id="sharing">Sharing Configuration</h2>
+            <p>In the About modal, copy your configuration URL to share your setup with others. The URL includes:</p>
+            <ul>
+                <li>Server list</li>
+                <li>Layout preference</li>
+                <li>Sort order</li>
+                <li>Refresh interval</li>
+                <li>Graph visibility</li>
+                <li>Theme</li>
+            </ul>
+
+            <h2 id="export-import">Export/Import</h2>
+            <p>In the About modal:</p>
+            <ul>
+                <li><strong>Export Config</strong> &mdash; Download a JSON file with your complete configuration including history data</li>
+                <li><strong>Import Config</strong> &mdash; Load a previously exported configuration file</li>
+            </ul>
+
+            <h2 id="url-params">URL Parameters</h2>
+            <p>Configure the monitor via URL query parameters:</p>
+            <table>
+                <tr><th>Parameter</th><th>Values</th><th>Example</th></tr>
+                <tr><td><code>servers</code></td><td>Comma-separated names or URLs</td><td><code>?servers=Main,Z,Kumi</code></td></tr>
+                <tr><td><code>layout</code></td><td><code>card</code>, <code>table</code></td><td><code>?layout=table</code></td></tr>
+                <tr><td><code>sort</code></td><td><code>custom</code>, <code>name</code>, <code>latency</code>, <code>version</code></td><td><code>?sort=latency</code></td></tr>
+                <tr><td><code>refresh</code></td><td>Seconds: <code>0</code>, <code>60</code>, <code>180</code>, <code>600</code>, <code>1800</code></td><td><code>?refresh=60</code></td></tr>
+                <tr><td><code>graphs</code></td><td><code>on</code>, <code>off</code></td><td><code>?graphs=on</code></td></tr>
+                <tr><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td><code>?theme=dark</code></td></tr>
+            </table>
+            <p>Combine parameters: <code>?servers=Main,Z&amp;layout=table&amp;graphs=on</code></p>
+
+            <h2 id="preset-servers">Preset Servers</h2>
+            <table>
+                <tr><th>Name</th><th>URL</th><th>Description</th></tr>
+                <tr><td>Main</td><td><code>overpass-api.de</code></td><td>Primary public instance</td></tr>
+                <tr><td>Z</td><td><code>z.overpass-api.de</code></td><td>Alternative endpoint</td></tr>
+                <tr><td>LZ4</td><td><code>lz4.overpass-api.de</code></td><td>Compressed responses</td></tr>
+                <tr><td>Kumi</td><td><code>overpass.kumi.systems</code></td><td>Community instance</td></tr>
+                <tr><td>Coffee</td><td><code>overpass.private.coffee</code></td><td>Community instance</td></tr>
+                <tr><td>Japan</td><td><code>overpass.osm.jp</code></td><td>Japan-based instance</td></tr>
+                <tr><td>Swiss</td><td><code>overpass.osm.ch</code></td><td>Switzerland-based instance</td></tr>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('docs-theme', next);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('docs-theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</body>
+</html>
