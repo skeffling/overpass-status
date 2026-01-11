@@ -2868,7 +2868,7 @@ out count;`;
 
             // Running queries status
             const runningCount = status.runningQueries?.length || 0;
-            const runningStatus = runningCount === 0 ? 'ok' : runningCount < 3 ? 'warning' : 'error';
+            const runningStatus = runningCount < 5 ? 'ok' : runningCount < 10 ? 'warning' : 'error';
 
             // Data age from landmark tests
             const dataAge = formatDataAge(state.serverDataAge[url]);
