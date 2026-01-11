@@ -1766,7 +1766,9 @@
             localStorage.setItem('overpass-status-history', JSON.stringify({
                 serverLatencyHistory: state.serverLatencyHistory,
                 serverActiveHistory: state.serverActiveHistory,
-                serverSlotsHistory: state.serverSlotsHistory
+                serverSlotsHistory: state.serverSlotsHistory,
+                serverVersion: state.serverVersion,
+                serverDataAge: state.serverDataAge
             }));
         }
 
@@ -1778,6 +1780,8 @@
                     if (data.serverLatencyHistory) state.serverLatencyHistory = data.serverLatencyHistory;
                     if (data.serverActiveHistory) state.serverActiveHistory = data.serverActiveHistory;
                     if (data.serverSlotsHistory) state.serverSlotsHistory = data.serverSlotsHistory;
+                    if (data.serverVersion) state.serverVersion = data.serverVersion;
+                    if (data.serverDataAge) state.serverDataAge = data.serverDataAge;
                 }
             } catch (e) {
                 console.error('Failed to load history:', e);
