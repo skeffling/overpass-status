@@ -2284,8 +2284,10 @@ out count;`;
 
             const isLoading = status.status === 'loading';
 
-            // Calculate slots in use
-            const slotsUsed = status.slotsTotal - status.slotsAvailable;
+            // Calculate slots in use (handle null values)
+            const slotsUsed = (status.slotsTotal != null && status.slotsAvailable != null)
+                ? status.slotsTotal - status.slotsAvailable
+                : 0;
 
             // For error state, show a simplified card with error message
             if (status.status === 'error') {
@@ -2350,9 +2352,9 @@ out count;`;
                               status.latency ? status.latency + 'ms' : '--'}
                         </div>
                     </div>
-                    <div class="metric-card ${status.slotsAvailable === 0 ? 'status-error' : slotsUsed > 0 ? 'status-warning' : ''}" title="${formatNextSlotTooltip(status)}">
+                    <div class="metric-card ${status.slotsAvailable !== null && status.slotsAvailable === 0 ? 'status-error' : status.slotsAvailable !== null && slotsUsed > 0 ? 'status-warning' : ''}" title="${formatNextSlotTooltip(status)}">
                         <div class="metric-label">Slots</div>
-                        <div class="metric-value ${status.slotsAvailable === 0 ? 'error' : 'ok'}">
+                        <div class="metric-value ${status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : 'ok'}">
                             ${status.slotsAvailable !== null ? `${status.slotsAvailable}/${status.slotsTotal || '?'}` : '--'}
                         </div>
                         ${formatNextSlotDetail(status, url)}
