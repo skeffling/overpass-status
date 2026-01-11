@@ -1949,11 +1949,16 @@
                 }
             }
 
-            // Refresh interval in seconds
+            // Refresh interval in seconds (respects minRefresh from config)
             if (params.has('refresh')) {
                 const refresh = parseInt(params.get('refresh')) * 1000;
                 if ([0, 60000, 120000, 180000, 300000, 600000, 1800000, 3600000].includes(refresh)) {
-                    state.autoRefreshInterval = refresh;
+                    // Enforce minRefresh - if refresh > 0 and below minimum, bump to minimum
+                    if (refresh > 0 && minRefreshInterval > 0 && refresh < minRefreshInterval) {
+                        state.autoRefreshInterval = minRefreshInterval;
+                    } else {
+                        state.autoRefreshInterval = refresh;
+                    }
                 }
             }
 
@@ -1983,8 +1988,8 @@
                         );
                         if (preset) {
                             state.servers.push({ url: preset.url, name: preset.name });
-                        } else if (server.startsWith('http')) {
-                            // It's a URL
+                        } else if (server.startsWith('http') && allowCustomServers) {
+                            // Custom URL - only allow if custom servers are permitted
                             const name = server.replace(/^https?:\/\//, '').split('/')[0].split('.')[0];
                             state.servers.push({ url: server, name });
                         }
