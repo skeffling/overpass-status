@@ -495,12 +495,23 @@
         }
 
         .server-row:last-child { border-bottom: none; }
-        .server-row:hover { background: var(--bg-card-hover); }
+        .server-row:hover:not(.server-row-header) { background: var(--bg-card-hover); }
         .server-row.draggable { cursor: grab; }
         .server-row.dragging { opacity: 0.5; cursor: grabbing; }
         .server-row.drag-over { background: var(--bg-card-hover); }
 
-        
+        .server-row-header {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-secondary);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .server-row-header:hover { background: var(--bg-secondary); }
+
         .server-name-col {
             min-width: 180px;
             flex-shrink: 0;
@@ -2967,6 +2978,25 @@ out count;`;
             elements.emptyState.style.display = 'none';
             elements.serversGrid.innerHTML = '';
 
+            // Add table header for compact view
+            if (isCompact) {
+                const header = document.createElement('div');
+                header.className = 'server-row server-row-header';
+                header.innerHTML = `
+                    <div class="server-name-col">Server</div>
+                    <div class="server-metrics">
+                        <div class="metric">Latency</div>
+                        <div class="metric">Slots</div>
+                        <div class="metric">Active</div>
+                        <div class="metric">Data Age</div>
+                        <div class="metric">Version</div>
+                        ${state.showGraphs ? `<div class="metric metric-graph">Latency</div><div class="metric metric-graph">Active</div>` : ''}
+                    </div>
+                    <div class="server-actions">Updated</div>
+                `;
+                elements.serversGrid.appendChild(header);
+            }
+
             getSortedServers().forEach(server => {
                 renderServerCard(server.url);
             });
@@ -3082,34 +3112,24 @@ out count;`;
                     </div>
                     <div class="server-metrics">
                         <div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
-                            <span class="metric-label">Latency</span>
                             <span class="metric-value ${latencyStatus}">${isLoading ? '...' : status.latency ? status.latency + 'ms' : '--'}</span>
-                            ${getAverageLatency(url) ? `<span class="metric-avg">avg ${getAverageLatency(url)}ms</span>` : ''}
                         </div>
                         <div class="metric" title="Available query slots${getAverageSlots(url) ? ' (avg: ' + getAverageSlots(url) + ')' : ''}">
-                            <span class="metric-label">Slots</span>
                             <span class="metric-value ${slotsStatus}">${status.slotsAvailable !== null ? status.slotsAvailable + '/' + (status.slotsTotal || '?') : '--'}</span>
-                            ${getAverageSlots(url) ? `<span class="metric-avg">avg ${getAverageSlots(url)}</span>` : ''}
                         </div>
                         <div class="metric" title="Active queries${getAverageActive(url) ? ' (avg: ' + getAverageActive(url) + ')' : ''}">
-                            <span class="metric-label">Active</span>
                             <span class="metric-value ${runningStatus}">${runningCount}</span>
-                            ${getAverageActive(url) ? `<span class="metric-avg">avg ${getAverageActive(url)}</span>` : ''}
                         </div>
                         <div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
-                            <span class="metric-label">Data Age</span>
                             <span class="metric-value ${dataAge?.status || ''}">${dataAge?.text || '--'}</span>
                         </div>
                         <div class="metric" title="${formatVersionTooltip(versionInfo)}">
-                            <span class="metric-label">Version</span>
                             <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>
                         ${state.showGraphs ? `<div class="metric metric-graph" title="Latency history">
-                            <span class="metric-label">Latency</span>
                             ${getLatencySparkline(url, 80, 20)}
                         </div>
                         <div class="metric metric-graph" title="Active queries history">
-                            <span class="metric-label">Active</span>
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
                     </div>
