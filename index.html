@@ -1721,6 +1721,7 @@
             serverSlotsHistory: {}, // array of last N slots available readings per server
             serverActiveHistory: {}, // array of last N active query counts per server
             serverHistoryTimestamps: {}, // array of timestamps for history data points
+            serverDataAgeHistory: {}, // array of last N data age readings (in minutes) per server
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
             serverVersionChangedAt: {}, // When each server's version last changed
@@ -1848,6 +1849,7 @@
                 serverLatencyHistory: state.serverLatencyHistory,
                 serverActiveHistory: state.serverActiveHistory,
                 serverSlotsHistory: state.serverSlotsHistory,
+                serverDataAgeHistory: state.serverDataAgeHistory,
                 serverHistoryTimestamps: state.serverHistoryTimestamps,
                 serverVersion: state.serverVersion,
                 serverDataAge: state.serverDataAge,
@@ -1863,6 +1865,7 @@
                     if (data.serverLatencyHistory) state.serverLatencyHistory = data.serverLatencyHistory;
                     if (data.serverActiveHistory) state.serverActiveHistory = data.serverActiveHistory;
                     if (data.serverSlotsHistory) state.serverSlotsHistory = data.serverSlotsHistory;
+                    if (data.serverDataAgeHistory) state.serverDataAgeHistory = data.serverDataAgeHistory;
                     if (data.serverHistoryTimestamps) state.serverHistoryTimestamps = data.serverHistoryTimestamps;
                     if (data.serverVersion) state.serverVersion = data.serverVersion;
                     if (data.serverDataAge) state.serverDataAge = data.serverDataAge;
@@ -2209,6 +2212,29 @@
             return createSparklineSVG(recentHistory, width, height, responsive);
         }
 
+        function getDataAgeSparkline(serverUrl, width = 80, height = 20, responsive = false) {
+            const history = state.serverDataAgeHistory[serverUrl];
+            if (!history || history.length < 2) return '';
+            // Show only last 20 points for on-screen sparklines
+            const recentHistory = history.slice(-20);
+            return createSparklineSVG(recentHistory, width, height, responsive);
+        }
+
+        function trackDataAge(serverUrl, isoTimestamp) {
+            if (!isoTimestamp) return;
+            const date = new Date(isoTimestamp);
+            const now = new Date();
+            const diffMins = Math.floor((now - date) / 60000);
+
+            if (!state.serverDataAgeHistory[serverUrl]) {
+                state.serverDataAgeHistory[serverUrl] = [];
+            }
+            state.serverDataAgeHistory[serverUrl].push(diffMins);
+            if (state.serverDataAgeHistory[serverUrl].length > 100) {
+                state.serverDataAgeHistory[serverUrl].shift();
+            }
+        }
+
         function getAverageSlots(serverUrl) {
             const history = state.serverSlotsHistory[serverUrl];
             if (!history || history.length < 5) return null;
@@ -2256,6 +2282,8 @@
                 history = state.serverActiveHistory[serverUrl];
             } else if (type === 'slots') {
                 history = state.serverSlotsHistory[serverUrl];
+            } else if (type === 'dataAge') {
+                history = state.serverDataAgeHistory[serverUrl];
             }
             if (!history || history.length < 2) return;
 
@@ -2265,7 +2293,8 @@
             const titles = {
                 latency: 'Latency History',
                 active: 'Active Queries History',
-                slots: 'Available Slots History'
+                slots: 'Available Slots History',
+                dataAge: 'Data Age History'
             };
             elements.graphPopupTitle.textContent = titles[type] || 'History';
 
@@ -2273,6 +2302,10 @@
                 // Convert ms to whole seconds, round up for max
                 elements.graphPopupMax.textContent = Math.ceil(max / 1000) + 's';
                 elements.graphPopupMin.textContent = '0s';
+            } else if (type === 'dataAge') {
+                // Show in minutes
+                elements.graphPopupMax.textContent = max + 'm';
+                elements.graphPopupMin.textContent = '0m';
             } else {
                 elements.graphPopupMax.textContent = max;
                 elements.graphPopupMin.textContent = '0';
@@ -2765,6 +2798,7 @@
                 // Extract metadata
                 if (data.osm3s?.timestamp_osm_base) {
                     state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                    trackDataAge(serverUrl, data.osm3s.timestamp_osm_base);
                 }
                 if (data.generator) {
                     updateServerVersion(serverUrl, data.generator);
@@ -2984,6 +3018,7 @@ out count;`;
                 // Extract and store metadata
                 if (data.osm3s?.timestamp_osm_base) {
                     state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                    trackDataAge(serverUrl, data.osm3s.timestamp_osm_base);
                 }
                 // generator is at root level, not inside osm3s
                 if (data.generator) {
@@ -3078,6 +3113,7 @@ out count;`;
                 // Extract metadata (timestamp from osm3s, generator at root)
                 if (data.osm3s?.timestamp_osm_base) {
                     state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
+                    trackDataAge(serverUrl, data.osm3s.timestamp_osm_base);
                 }
                 if (data.generator) {
                     updateServerVersion(serverUrl, data.generator);
@@ -3292,6 +3328,7 @@ out count;`;
                         ${state.showGraphs && cols.latency ? '<div class="metric metric-graph">Latency</div>' : ''}
                         ${state.showGraphs && cols.slots ? '<div class="metric metric-graph">Slots</div>' : ''}
                         ${state.showGraphs && cols.active ? '<div class="metric metric-graph">Active</div>' : ''}
+                        ${state.showGraphs && cols.dataAge ? '<div class="metric metric-graph">Data Age</div>' : ''}
                     </div>
                     <div class="server-actions">Updated</div>
                 `;
@@ -3437,6 +3474,9 @@ out count;`;
                         ${state.showGraphs && cols.active ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="active">
                             ${getActiveSparkline(url, 80, 20)}
                         </div>` : ''}
+                        ${state.showGraphs && cols.dataAge && getDataAgeSparkline(url) ? `<div class="metric metric-graph sparkline-hover" data-server="${url}" data-type="dataAge">
+                            ${getDataAgeSparkline(url, 80, 20)}
+                        </div>` : ''}
                     </div>
                     <div class="server-actions">
                         <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
@@ -3473,9 +3513,10 @@ out count;`;
                             <div class="metric-value ${runningStatus}">${runningCount}</div>
                             ${state.showGraphs ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="active">${getActiveSparkline(url, 100, 18, true)}</div>` : (getAverageActive(url) ? `<div class="metric-detail">avg: ${getAverageActive(url)}</div>` : '')}
                         </div>` : ''}
-                        ${state.visibleColumns.dataAge ? `<div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
+                        ${state.visibleColumns.dataAge ? `<div class="metric-card ${dataAge?.status ? 'status-' + dataAge.status : ''}" ${!state.showGraphs || !getDataAgeSparkline(url) ? `title="${formatDataAgeTooltip(state.serverDataAge[url])}"` : ''}>
                             <div class="metric-label">Data Age</div>
                             <div class="metric-value">${dataAge?.text || '--'}</div>
+                            ${state.showGraphs && getDataAgeSparkline(url) ? `<div class="sparkline-card sparkline-hover" data-server="${url}" data-type="dataAge">${getDataAgeSparkline(url, 100, 18, true)}</div>` : ''}
                         </div>` : ''}
                         ${state.visibleColumns.version ? `<div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo, url)}">
                             <div class="metric-label">Version</div>
