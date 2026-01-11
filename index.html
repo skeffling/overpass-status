@@ -1649,6 +1649,7 @@
             serverActiveHistory: {}, // array of last N active query counts per server
             serverDataAge: {}, // timestamp_osm_base per server
             serverVersion: {}, // Overpass version info per server
+            serverVersionChangedAt: {}, // When each server's version last changed
             logs: [],
             logFilter: null // null = show all, or serverUrl to filter
         };
@@ -1767,7 +1768,8 @@
                 serverActiveHistory: state.serverActiveHistory,
                 serverSlotsHistory: state.serverSlotsHistory,
                 serverVersion: state.serverVersion,
-                serverDataAge: state.serverDataAge
+                serverDataAge: state.serverDataAge,
+                serverVersionChangedAt: state.serverVersionChangedAt
             }));
         }
 
@@ -1781,6 +1783,7 @@
                     if (data.serverSlotsHistory) state.serverSlotsHistory = data.serverSlotsHistory;
                     if (data.serverVersion) state.serverVersion = data.serverVersion;
                     if (data.serverDataAge) state.serverDataAge = data.serverDataAge;
+                    if (data.serverVersionChangedAt) state.serverVersionChangedAt = data.serverVersionChangedAt;
                 }
             } catch (e) {
                 console.error('Failed to load history:', e);
@@ -2242,7 +2245,7 @@
             return `How recently the OSM data was updated\nLast update: ${date.toLocaleString()}`;
         }
 
-        function formatVersionTooltip(versionInfo) {
+        function formatVersionTooltip(versionInfo, serverUrl) {
             if (!versionInfo) {
                 return 'Overpass API software version\nRun a query to check';
             }
@@ -2252,7 +2255,18 @@
             if (versionInfo.commit) {
                 tooltip += `\nCommit: ${versionInfo.commit}`;
             }
+            // Show when version last changed
+            if (serverUrl && state.serverVersionChangedAt[serverUrl]) {
+                const changedAt = new Date(state.serverVersionChangedAt[serverUrl]);
+                tooltip += `\nUpgraded: ${formatRelativeTime(changedAt)}`;
+            }
             return tooltip;
+        }
+
+        function formatVersionUpgradeTime(serverUrl) {
+            const changedAt = state.serverVersionChangedAt[serverUrl];
+            if (!changedAt) return '';
+            return formatRelativeTime(new Date(changedAt));
         }
 
         function updateLastUpdatedTimes() {
@@ -2277,6 +2291,26 @@
                 };
             }
             return { full: generator, version: generator, commit: null };
+        }
+
+        function updateServerVersion(serverUrl, generator) {
+            const newVersion = parseGenerator(generator);
+            const oldVersion = state.serverVersion[serverUrl];
+
+            // Check if version changed
+            if (oldVersion) {
+                const versionChanged = oldVersion.version !== newVersion.version;
+                const commitChanged = oldVersion.commit !== newVersion.commit;
+
+                if (versionChanged || commitChanged) {
+                    // Version changed - record the timestamp
+                    state.serverVersionChangedAt[serverUrl] = new Date().toISOString();
+                }
+            } else {
+                // First time seeing this server - don't set changedAt (we don't know when it last changed)
+            }
+
+            state.serverVersion[serverUrl] = newVersion;
         }
 
         function compareVersions(v1, v2) {
@@ -2547,7 +2581,7 @@
                     state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
                 }
                 if (data.generator) {
-                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                    updateServerVersion(serverUrl, data.generator);
                 }
             } catch (error) {
                 logEntry.error = error.message;
@@ -2758,7 +2792,7 @@ out count;`;
                 }
                 // generator is at root level, not inside osm3s
                 if (data.generator) {
-                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                    updateServerVersion(serverUrl, data.generator);
                 }
                 renderServerCard(serverUrl);
 
@@ -2851,7 +2885,7 @@ out count;`;
                     state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
                 }
                 if (data.generator) {
-                    state.serverVersion[serverUrl] = parseGenerator(data.generator);
+                    updateServerVersion(serverUrl, data.generator);
                 }
                 renderServerCard(serverUrl);
 
@@ -3195,7 +3229,7 @@ out count;`;
                         ${cols.dataAge ? `<div class="metric" title="${formatDataAgeTooltip(state.serverDataAge[url])}">
                             <span class="metric-value ${dataAge?.status || ''}">${dataAge?.text || '--'}</span>
                         </div>` : ''}
-                        ${cols.version ? `<div class="metric" title="${formatVersionTooltip(versionInfo)}">
+                        ${cols.version ? `<div class="metric" title="${formatVersionTooltip(versionInfo, url)}">
                             <span class="metric-value ${getVersionStatus(versionInfo)}">${versionInfo ? versionInfo.version : '--'}</span>
                         </div>` : ''}
                         ${state.showGraphs && cols.latency ? `<div class="metric metric-graph" title="Latency history">
@@ -3244,9 +3278,10 @@ out count;`;
                             <div class="metric-label">Data Age</div>
                             <div class="metric-value">${dataAge?.text || '--'}</div>
                         </div>` : ''}
-                        ${state.visibleColumns.version ? `<div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo)}">
+                        ${state.visibleColumns.version ? `<div class="metric-card ${getVersionStatus(versionInfo) ? 'status-' + getVersionStatus(versionInfo) : ''}" title="${formatVersionTooltip(versionInfo, url)}">
                             <div class="metric-label">Version</div>
                             <div class="metric-value">${versionInfo ? versionInfo.version : '--'}${versionInfo?.commit ? ` <span class="version-commit">${versionInfo.commit.substring(0, 7)}</span>` : ''}</div>
+                            ${formatVersionUpgradeTime(url) ? `<div class="metric-detail">upgraded ${formatVersionUpgradeTime(url)}</div>` : ''}
                         </div>` : ''}
                     </div>
                 `;
