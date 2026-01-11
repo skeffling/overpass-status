@@ -583,6 +583,10 @@
             text-decoration: underline;
         }
 
+        .endpoint-warning {
+            color: var(--status-warning);
+        }
+
         .server-metrics {
             display: flex;
             align-items: center;
@@ -3557,7 +3561,7 @@ out count;`;
                 el.innerHTML = `
                     <div class="server-name-col">
                         <div class="server-name">${serverName}</div>
-                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Click to see all ${endpointCount} detected endpoint${endpointCount !== 1 ? 's' : ''}" onclick="showEndpointsModal('${url}')" style="cursor: pointer;">→ ${endpoint}${endpointCount > 1 ? ' (+' + (endpointCount - 1) + ')' : ''}</span>` : ''}</div>
+                        <div class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" ${endpointCount > 1 ? `title="Click to see all ${endpointCount} detected endpoints" onclick="showEndpointsModal('${url}')" style="cursor: pointer;"` : `title="Backend server handling this request"`}>→ ${endpoint}${endpointCount > 1 ? ' <span class="endpoint-warning" title="Multiple backends detected - click to add individually">&#9888;</span>' : ''}</span>` : ''}</div>
                     </div>
                     <div class="server-metrics">
                         ${cols.latency ? `<div class="metric" title="Response time${getAverageLatency(url) ? ' (avg: ' + getAverageLatency(url) + 'ms)' : ''}">
@@ -3599,7 +3603,7 @@ out count;`;
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
                             <span class="server-name">${serverName}</span>
-                            <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" title="Click to see all ${endpointCount} detected endpoint${endpointCount !== 1 ? 's' : ''}" onclick="showEndpointsModal('${url}')" style="cursor: pointer;">→ ${endpoint}${endpointCount > 1 ? ' (+' + (endpointCount - 1) + ')' : ''}</span>` : ''}</span>
+                            <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" ${endpointCount > 1 ? `title="Click to see all ${endpointCount} detected endpoints" onclick="showEndpointsModal('${url}')" style="cursor: pointer;"` : `title="Backend server handling this request"`}>→ ${endpoint}${endpointCount > 1 ? ' <span class="endpoint-warning" title="Multiple backends detected - click to add individually">&#9888;</span>' : ''}</span>` : ''}</span>
                         </div>
                         <div class="server-actions">
                             <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>

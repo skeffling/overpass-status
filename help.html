@@ -334,6 +334,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Features</div>
                     <a href="#graphs" class="nav-link">Sparkline Graphs</a>
+                    <a href="#load-balancing" class="nav-link">Load Balancing</a>
                     <a href="#landmarks" class="nav-link">Landmark Tests</a>
                     <a href="#ordering" class="nav-link">Custom Ordering</a>
                     <a href="#sharing" class="nav-link">Sharing Config</a>
@@ -461,6 +462,20 @@
                 <li>X-axis timestamps (oldest to newest)</li>
             </ul>
             <p>History stores the last 100 data points per server. Sparklines display the most recent 20 points. Data persists across page reloads.</p>
+
+            <h2 id="load-balancing">Load Balancing Detection</h2>
+            <p>Some Overpass servers use load balancing with multiple backend servers. The monitor detects this by tracking the "Announced endpoint" from each status response.</p>
+            <p>When a different backend is detected:</p>
+            <ul>
+                <li>The current endpoint appears after the server URL (e.g., <code>→ gall</code>)</li>
+                <li>A warning icon <span style="color: var(--status-warning);">&#9888;</span> appears when multiple backends are detected</li>
+                <li>Click the endpoint to see all detected backends</li>
+                <li>Add individual backends as separate servers for more consistent monitoring</li>
+            </ul>
+            <div class="note">
+                <div class="note-title">Why monitor individual backends?</div>
+                Load-balanced servers may have backends with different data freshness or performance. Adding them individually lets you monitor each backend's health separately and identify problematic nodes.
+            </div>
 
             <h2 id="landmarks">Landmark Tests</h2>
             <p>Test server response by querying for famous landmarks around the world:</p>
