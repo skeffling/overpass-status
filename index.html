@@ -336,6 +336,33 @@
             font-size: 1rem;
         }
 
+        .server-error {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: var(--status-error-bg);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--status-error);
+        }
+
+        .server-error-icon {
+            font-size: 1.2rem;
+            color: var(--status-error);
+        }
+
+        .server-error-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: var(--status-error);
+            font-weight: 500;
+        }
+
+        .server-error-latency {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
         .server-metrics {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1518,6 +1545,27 @@ out count;`;
                 }
             }
 
+            // For error state, show a simplified card with error message
+            if (status.status === 'error') {
+                card.innerHTML = `
+                    <div class="server-card-header">
+                        <div class="server-url">
+                            <span class="server-url-icon">&#128421;</span>
+                            <span>${displayUrl}</span>
+                        </div>
+                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove server">
+                            &#10005;
+                        </button>
+                    </div>
+                    <div class="server-error">
+                        <span class="server-error-icon">&#10007;</span>
+                        <span class="server-error-text">${status.error || 'Connection failed'}</span>
+                        ${status.latency ? `<span class="server-error-latency">(${status.latency}ms)</span>` : ''}
+                    </div>
+                `;
+                return;
+            }
+
             card.innerHTML = `
                 <div class="server-card-header">
                     <div class="server-url">
@@ -1534,11 +1582,10 @@ out count;`;
                         <div class="metric-value ${status.status}">
                             ${isLoading ? '<span class="loading"></span>' :
                               status.status === 'ok' ? '&#10003;' :
-                              status.status === 'warning' ? '&#9888;' :
-                              status.status === 'error' ? '&#10007;' : '--'}
+                              status.status === 'warning' ? '&#9888;' : '--'}
                         </div>
                         <div class="metric-detail">
-                            ${status.latency ? `${status.latency}ms` : status.error || 'Checking...'}
+                            ${status.latency ? `${status.latency}ms` : 'Checking...'}
                         </div>
                     </div>
                     <div class="metric-card ${dataStatus ? `status-${dataStatus === 'ok' ? 'ok' : dataStatus === 'warning' ? 'warning' : 'error'}` : ''}">
