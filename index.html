@@ -211,69 +211,6 @@
             pointer-events: none;
         }
 
-        /* ========== Refresh Controls ========== */
-        .refresh-control {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-
-        .refresh-select {
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-
-        .refresh-select:hover {
-            border-color: var(--accent-primary);
-        }
-
-        .refresh-select:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .refresh-countdown {
-            position: relative;
-            width: 36px;
-            height: 36px;
-        }
-
-        .refresh-countdown svg {
-            transform: rotate(-90deg);
-        }
-
-        .refresh-countdown circle {
-            fill: none;
-            stroke-width: 3;
-        }
-
-        .refresh-countdown .bg {
-            stroke: var(--border-color);
-        }
-
-        .refresh-countdown .progress {
-            stroke: var(--accent-primary);
-            stroke-linecap: round;
-            transition: stroke-dashoffset 1s linear;
-        }
-
-        .refresh-countdown .time {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
         /* ========== Section ========== */
         .section {
             margin-bottom: var(--spacing-xl);
@@ -593,11 +530,18 @@
             align-items: center;
             gap: var(--spacing-md);
             transition: all var(--transition-fast);
+            cursor: pointer;
+            user-select: none;
         }
 
         .landmark-card:hover {
             background: var(--bg-card-hover);
             transform: translateY(-2px);
+            border-color: var(--accent-primary);
+        }
+
+        .landmark-card:active {
+            transform: translateY(0);
         }
 
         .landmark-icon {
@@ -645,6 +589,157 @@
         .landmark-latency.ok { color: var(--status-ok); }
         .landmark-latency.warning { color: var(--status-warning); }
         .landmark-latency.error { color: var(--status-error); }
+
+        /* ========== Log Pane ========== */
+        .log-pane {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 4px 30px var(--shadow-color);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .log-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .log-badge {
+            background: var(--accent-primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .log-content {
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .log-timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .log-method {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .log-method.GET {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .log-method.POST {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        .log-url {
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .log-status {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .log-status.success {
+            background: var(--status-ok-bg);
+            color: var(--status-ok);
+        }
+
+        .log-status.error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .log-latency {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .log-details {
+            margin-top: var(--spacing-xs);
+            padding: var(--spacing-sm);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 150px;
+            overflow-y: auto;
+            color: var(--text-secondary);
+        }
+
+        .log-details.request {
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .log-details.response {
+            border-left: 3px solid var(--status-ok);
+        }
+
+        .log-details.error {
+            border-left: 3px solid var(--status-error);
+        }
+
+        .log-toggle {
+            cursor: pointer;
+            color: var(--accent-primary);
+            font-size: 0.75rem;
+            margin-top: var(--spacing-xs);
+        }
+
+        .log-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .log-empty {
+            padding: var(--spacing-xl);
+            text-align: center;
+            color: var(--text-muted);
+        }
 
         /* ========== Loading States ========== */
         .loading {
@@ -760,23 +855,10 @@
                 </div>
             </div>
             <div class="header-controls">
-                <div class="refresh-control">
-                    <select class="refresh-select" id="refreshInterval">
-                        <option value="15000">15s</option>
-                        <option value="30000" selected>30s</option>
-                        <option value="60000">60s</option>
-                        <option value="300000">5m</option>
-                        <option value="0">Manual</option>
-                    </select>
-                    <div class="refresh-countdown" id="countdownRing">
-                        <svg width="36" height="36">
-                            <circle class="bg" cx="18" cy="18" r="15"></circle>
-                            <circle class="progress" cx="18" cy="18" r="15"
-                                stroke-dasharray="94.2" stroke-dashoffset="0"></circle>
-                        </svg>
-                        <span class="time" id="countdownTime">30</span>
-                    </div>
-                </div>
+                <button class="btn btn-secondary" id="refreshAllBtn">
+                    <span>&#8635;</span>
+                    <span>Refresh All</span>
+                </button>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <span class="theme-toggle-icons">
                         <span>&#9728;</span>
@@ -819,6 +901,7 @@
                 <h2 class="section-title">
                     <span>&#127757;</span>
                     <span>Landmark Tests</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(click to test)</span>
                 </h2>
                 <div class="section-actions">
                     <button class="btn btn-secondary" id="runTestsBtn">
@@ -829,6 +912,30 @@
             </div>
             <div class="landmarks-grid" id="landmarksGrid">
                 <!-- Landmark cards will be inserted here -->
+            </div>
+        </section>
+
+        <!-- Log Pane Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>&#128220;</span>
+                    <span>API Log</span>
+                    <span class="log-badge" id="logCount">0</span>
+                </h2>
+                <div class="section-actions">
+                    <button class="btn btn-secondary" id="clearLogBtn">
+                        <span>&#128465;</span>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+            <div class="log-pane">
+                <div class="log-content" id="logContent">
+                    <div class="log-empty" id="logEmpty">
+                        No API calls yet. Add a server or click a landmark to begin.
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -862,7 +969,6 @@
     <script>
         // ========== Configuration ==========
         const CONFIG = {
-            defaultRefreshInterval: 30000,
             statusTimeout: 10000,
             queryTimeout: 15000,
             presetServers: [
@@ -887,20 +993,15 @@
         let state = {
             servers: [],
             theme: 'light',
-            refreshInterval: CONFIG.defaultRefreshInterval,
-            refreshTimer: null,
-            countdownTimer: null,
-            countdownValue: 0,
             landmarkResults: {},
-            serverStatuses: {}
+            serverStatuses: {},
+            logs: []
         };
 
         // ========== DOM Elements ==========
         const elements = {
             themeToggle: document.getElementById('themeToggle'),
-            refreshInterval: document.getElementById('refreshInterval'),
-            countdownRing: document.getElementById('countdownRing'),
-            countdownTime: document.getElementById('countdownTime'),
+            refreshAllBtn: document.getElementById('refreshAllBtn'),
             serversGrid: document.getElementById('serversGrid'),
             emptyState: document.getElementById('emptyState'),
             landmarksGrid: document.getElementById('landmarksGrid'),
@@ -911,15 +1012,18 @@
             customServerUrl: document.getElementById('customServerUrl'),
             addCustomServerBtn: document.getElementById('addCustomServerBtn'),
             closeModalBtn: document.getElementById('closeModalBtn'),
-            runTestsBtn: document.getElementById('runTestsBtn')
+            runTestsBtn: document.getElementById('runTestsBtn'),
+            logContent: document.getElementById('logContent'),
+            logEmpty: document.getElementById('logEmpty'),
+            logCount: document.getElementById('logCount'),
+            clearLogBtn: document.getElementById('clearLogBtn')
         };
 
         // ========== Storage ==========
         function saveState() {
             localStorage.setItem('overpass-status', JSON.stringify({
                 servers: state.servers,
-                theme: state.theme,
-                refreshInterval: state.refreshInterval
+                theme: state.theme
             }));
         }
 
@@ -930,7 +1034,6 @@
                     const data = JSON.parse(saved);
                     state.servers = data.servers || [];
                     state.theme = data.theme || 'light';
-                    state.refreshInterval = data.refreshInterval || CONFIG.defaultRefreshInterval;
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -940,6 +1043,79 @@
             if (!localStorage.getItem('overpass-status')) {
                 state.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
+        }
+
+        // ========== Logging ==========
+        function addLog(entry) {
+            state.logs.unshift(entry);
+            if (state.logs.length > 100) {
+                state.logs.pop(); // Keep max 100 entries
+            }
+            renderLogs();
+        }
+
+        function clearLogs() {
+            state.logs = [];
+            renderLogs();
+        }
+
+        function formatTimestamp(date) {
+            return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+                   '.' + String(date.getMilliseconds()).padStart(3, '0');
+        }
+
+        function truncateText(text, maxLength = 500) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '... [truncated]';
+        }
+
+        function renderLogs() {
+            elements.logCount.textContent = state.logs.length;
+
+            if (state.logs.length === 0) {
+                elements.logEmpty.style.display = 'block';
+                elements.logContent.querySelectorAll('.log-entry').forEach(el => el.remove());
+                return;
+            }
+
+            elements.logEmpty.style.display = 'none';
+
+            // Clear existing entries
+            elements.logContent.querySelectorAll('.log-entry').forEach(el => el.remove());
+
+            // Add log entries
+            state.logs.forEach((log, index) => {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `
+                    <div class="log-entry-header">
+                        <span class="log-timestamp">${formatTimestamp(log.timestamp)}</span>
+                        <span class="log-method ${log.method}">${log.method}</span>
+                        <span class="log-url">${log.url}</span>
+                        ${log.status ? `<span class="log-status ${log.status >= 200 && log.status < 300 ? 'success' : 'error'}">${log.status}</span>` : ''}
+                        ${log.latency ? `<span class="log-latency">${log.latency}ms</span>` : ''}
+                    </div>
+                    ${log.requestBody ? `
+                        <div class="log-toggle" onclick="toggleLogDetails(this, 'request')">Show request</div>
+                        <div class="log-details request" style="display: none;">${truncateText(log.requestBody)}</div>
+                    ` : ''}
+                    ${log.responseBody ? `
+                        <div class="log-toggle" onclick="toggleLogDetails(this, 'response')">Show response</div>
+                        <div class="log-details response" style="display: none;">${truncateText(log.responseBody)}</div>
+                    ` : ''}
+                    ${log.error ? `
+                        <div class="log-details error">${log.error}</div>
+                    ` : ''}
+                `;
+                elements.logContent.appendChild(entry);
+            });
+        }
+
+        function toggleLogDetails(toggleEl, type) {
+            const detailsEl = toggleEl.nextElementSibling;
+            const isHidden = detailsEl.style.display === 'none';
+            detailsEl.style.display = isHidden ? 'block' : 'none';
+            toggleEl.textContent = isHidden ? `Hide ${type}` : `Show ${type}`;
         }
 
         // ========== Theme ==========
@@ -983,12 +1159,18 @@
         // ========== Status Fetching ==========
         async function fetchServerStatus(serverUrl) {
             const startTime = performance.now();
+            const url = `${serverUrl}/api/status`;
+            const logEntry = {
+                timestamp: new Date(),
+                method: 'GET',
+                url: url
+            };
 
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), CONFIG.statusTimeout);
 
-                const response = await fetch(`${serverUrl}/api/status`, {
+                const response = await fetch(url, {
                     signal: controller.signal
                 });
                 clearTimeout(timeout);
@@ -996,12 +1178,23 @@
                 const latency = Math.round(performance.now() - startTime);
                 const text = await response.text();
 
+                // Add to log
+                logEntry.status = response.status;
+                logEntry.latency = latency;
+                logEntry.responseBody = text;
+                addLog(logEntry);
+
                 return parseStatus(text, latency);
             } catch (error) {
+                const latency = Math.round(performance.now() - startTime);
+                logEntry.latency = latency;
+                logEntry.error = error.name === 'AbortError' ? 'Request timed out' : error.message;
+                addLog(logEntry);
+
                 return {
                     status: 'error',
                     error: error.name === 'AbortError' ? 'Timeout' : error.message,
-                    latency: Math.round(performance.now() - startTime)
+                    latency: latency
                 };
             }
         }
@@ -1062,16 +1255,23 @@
             if (!serverUrl) return null;
 
             const startTime = performance.now();
+            const url = `${serverUrl}/api/interpreter`;
+            const query = `[out:json][timeout:10];
+node(around:200,${landmark.lat},${landmark.lon})[${landmark.query}];
+out count;`;
+
+            const logEntry = {
+                timestamp: new Date(),
+                method: 'POST',
+                url: `${url} (${landmark.name})`,
+                requestBody: query
+            };
 
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), CONFIG.queryTimeout);
 
-                const query = `[out:json][timeout:10];
-                    node(around:200,${landmark.lat},${landmark.lon})[${landmark.query}];
-                    out count;`;
-
-                const response = await fetch(`${serverUrl}/api/interpreter`, {
+                const response = await fetch(url, {
                     method: 'POST',
                     body: `data=${encodeURIComponent(query)}`,
                     headers: {
@@ -1082,7 +1282,14 @@
                 clearTimeout(timeout);
 
                 const latency = Math.round(performance.now() - startTime);
-                const data = await response.json();
+                const text = await response.text();
+                const data = JSON.parse(text);
+
+                // Add to log
+                logEntry.status = response.status;
+                logEntry.latency = latency;
+                logEntry.responseBody = text;
+                addLog(logEntry);
 
                 return {
                     status: 'ok',
@@ -1090,12 +1297,33 @@
                     count: data.elements?.[0]?.tags?.total || 0
                 };
             } catch (error) {
+                const latency = Math.round(performance.now() - startTime);
+                logEntry.latency = latency;
+                logEntry.error = error.name === 'AbortError' ? 'Request timed out' : error.message;
+                addLog(logEntry);
+
                 return {
                     status: 'error',
                     error: error.name === 'AbortError' ? 'Timeout' : error.message,
-                    latency: Math.round(performance.now() - startTime)
+                    latency: latency
                 };
             }
+        }
+
+        async function runSingleLandmarkTest(landmark) {
+            if (state.servers.length === 0) {
+                alert('Please add at least one server first.');
+                return;
+            }
+
+            // Set to loading
+            state.landmarkResults[landmark.name] = { status: 'loading' };
+            renderLandmarkCard(landmark);
+
+            // Run test
+            const result = await runLandmarkTest(landmark);
+            state.landmarkResults[landmark.name] = result;
+            renderLandmarkCard(landmark);
         }
 
         async function runAllLandmarkTests() {
@@ -1230,6 +1458,7 @@
                 card = document.createElement('div');
                 card.className = 'landmark-card';
                 card.setAttribute('data-landmark-name', landmark.name);
+                card.addEventListener('click', () => runSingleLandmarkTest(landmark));
                 elements.landmarksGrid.appendChild(card);
             }
 
@@ -1272,54 +1501,9 @@
             });
         }
 
-        // ========== Refresh & Countdown ==========
-        function startRefreshTimer() {
-            stopRefreshTimer();
-
-            if (state.refreshInterval === 0) {
-                elements.countdownRing.style.display = 'none';
-                return;
-            }
-
-            elements.countdownRing.style.display = 'block';
-            state.countdownValue = state.refreshInterval / 1000;
-            updateCountdown();
-
-            state.countdownTimer = setInterval(() => {
-                state.countdownValue--;
-                updateCountdown();
-
-                if (state.countdownValue <= 0) {
-                    refresh();
-                    state.countdownValue = state.refreshInterval / 1000;
-                }
-            }, 1000);
-        }
-
-        function stopRefreshTimer() {
-            if (state.countdownTimer) {
-                clearInterval(state.countdownTimer);
-                state.countdownTimer = null;
-            }
-        }
-
-        function updateCountdown() {
-            const total = state.refreshInterval / 1000;
-            const progress = (total - state.countdownValue) / total;
-            const circumference = 94.2; // 2 * PI * 15
-            const offset = circumference * (1 - progress);
-
-            const progressCircle = elements.countdownRing.querySelector('.progress');
-            progressCircle.style.strokeDashoffset = offset;
-
-            elements.countdownTime.textContent = state.countdownValue;
-        }
-
-        async function refresh() {
+        // ========== Refresh ==========
+        async function refreshAll() {
             await fetchAllStatuses();
-            if (state.servers.length > 0) {
-                await runAllLandmarkTests();
-            }
         }
 
         // ========== Modal ==========
@@ -1337,12 +1521,7 @@
         // ========== Event Listeners ==========
         function setupEventListeners() {
             elements.themeToggle.addEventListener('click', toggleTheme);
-
-            elements.refreshInterval.addEventListener('change', (e) => {
-                state.refreshInterval = parseInt(e.target.value);
-                saveState();
-                startRefreshTimer();
-            });
+            elements.refreshAllBtn.addEventListener('click', refreshAll);
 
             elements.addServerBtn.addEventListener('click', openModal);
             elements.addServerBtnEmpty.addEventListener('click', openModal);
@@ -1373,15 +1552,7 @@
             });
 
             elements.runTestsBtn.addEventListener('click', runAllLandmarkTests);
-
-            // Pause refresh when tab is hidden
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    stopRefreshTimer();
-                } else {
-                    startRefreshTimer();
-                }
-            });
+            elements.clearLogBtn.addEventListener('click', clearLogs);
 
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -1396,20 +1567,15 @@
             loadState();
             applyTheme();
 
-            // Set refresh interval in dropdown
-            elements.refreshInterval.value = state.refreshInterval.toString();
-
             renderServers();
             renderLandmarks();
+            renderLogs();
             setupEventListeners();
 
             // Initial fetch
             if (state.servers.length > 0) {
                 fetchAllStatuses();
-                runAllLandmarkTests();
             }
-
-            startRefreshTimer();
         }
 
         // Start the app
