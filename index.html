@@ -1587,6 +1587,11 @@
             .card-metrics {
                 gap: var(--spacing-xs);
             }
+
+            /* Hide button text on mobile */
+            .btn-text {
+                display: none;
+            }
         }
 
         /* ========== Animations ========== */
@@ -1723,7 +1728,7 @@
                     </select>
                     <button class="btn btn-secondary" id="refreshAllBtn">
                         <span>&#8635;</span>
-                        <span>Refresh</span>
+                        <span class="btn-text">Refresh</span>
                     </button>
                     <button class="btn btn-primary" id="addServerBtn">
                         <span>+</span>
@@ -4264,6 +4269,7 @@ out count;`;
                 }
             } catch (e) {
                 // Config file doesn't exist or is invalid - that's fine
+                console.log('Config load error:', e.message);
             }
         }
 
