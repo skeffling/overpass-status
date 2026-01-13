@@ -14,5 +14,10 @@
 
   "_comment6": "allowCustomServers: set to false to prevent users from adding their own servers",
   "_comment7": "When false, users can only monitor the servers you define above",
-  "allowCustomServers": true
+  "allowCustomServers": true,
+
+  "_comment8": "UI visibility options - set to false to hide these elements",
+  "_comment9": "Useful for creating a simple status-only page for your Overpass server",
+  "showHelp": true,
+  "showAbout": true
 }

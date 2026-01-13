@@ -630,7 +630,13 @@
                 <tr><td><code>servers</code></td><td>Array of default servers for new visitors</td></tr>
                 <tr><td><code>minRefresh</code></td><td>Minimum refresh interval in seconds (restricts dropdown options)</td></tr>
                 <tr><td><code>allowCustomServers</code></td><td>Set to <code>false</code> to prevent users from adding their own servers</td></tr>
+                <tr><td><code>showHelp</code></td><td>Set to <code>false</code> to hide the help link</td></tr>
+                <tr><td><code>showAbout</code></td><td>Set to <code>false</code> to hide the about button</td></tr>
             </table>
+            <div class="note">
+                <div class="note-title">Simple Status Page</div>
+                To create a minimal status-only page for your Overpass server, set <code>allowCustomServers</code>, <code>showHelp</code>, and <code>showAbout</code> all to <code>false</code>. This hides all navigation and editing options, showing only the server status.
+            </div>
             <h3>Example</h3>
             <pre><code>{
   "servers": [
@@ -638,7 +644,9 @@
     { "name": "Backup", "url": "https://overpass2.example.com" }
   ],
   "minRefresh": 180,
-  "allowCustomServers": false
+  "allowCustomServers": false,
+  "showHelp": false,
+  "showAbout": false
 }</code></pre>
             <p>Copy <code>config.example.json</code> to <code>config.json</code> and edit as needed.</p>
             <div class="note">

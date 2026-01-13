@@ -1662,7 +1662,7 @@
                 <button class="btn btn-icon btn-secondary" id="aboutBtn" title="About">
                     &#9432;
                 </button>
-                <a href="help.html" class="btn btn-icon btn-secondary" title="Help">?</a>
+                <a href="help.html" class="btn btn-icon btn-secondary" id="helpLink" title="Help">?</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <span class="theme-toggle-icons">
                         <span>&#9728;</span>
@@ -2016,6 +2016,7 @@
             closeModalBtn: document.getElementById('closeModalBtn'),
             addAllServersBtn: document.getElementById('addAllServersBtn'),
             aboutBtn: document.getElementById('aboutBtn'),
+            helpLink: document.getElementById('helpLink'),
             aboutModal: document.getElementById('aboutModal'),
             closeAboutBtn: document.getElementById('closeAboutBtn'),
             endpointsModal: document.getElementById('endpointsModal'),
@@ -4212,6 +4213,8 @@ out count;`;
         // ========== Server Config ==========
         let minRefreshInterval = 0; // Minimum refresh interval from config (in ms)
         let allowCustomServers = true; // Whether users can add custom servers
+        let showHelp = true; // Whether to show the help link
+        let showAbout = true; // Whether to show the about button
 
         async function loadServerConfig() {
             try {
@@ -4239,6 +4242,18 @@ out count;`;
                 if (config.allowCustomServers === false) {
                     allowCustomServers = false;
                     applyCustomServerRestriction();
+                }
+
+                // Apply showHelp setting
+                if (config.showHelp === false) {
+                    showHelp = false;
+                    applyHideHelp();
+                }
+
+                // Apply showAbout setting
+                if (config.showAbout === false) {
+                    showAbout = false;
+                    applyHideAbout();
                 }
             } catch (e) {
                 // Config file doesn't exist or is invalid - that's fine
@@ -4283,6 +4298,18 @@ out count;`;
 
             // Show restriction info
             showSiteRestriction('Adding custom servers is disabled');
+        }
+
+        function applyHideHelp() {
+            if (elements.helpLink) {
+                elements.helpLink.style.display = 'none';
+            }
+        }
+
+        function applyHideAbout() {
+            if (elements.aboutBtn) {
+                elements.aboutBtn.style.display = 'none';
+            }
         }
 
         function showSiteRestriction(message) {
