@@ -249,6 +249,13 @@
             font-weight: 400;
             opacity: 0.6;
             -webkit-text-fill-color: var(--text-muted);
+            text-decoration: none;
+            transition: opacity var(--transition-fast);
+        }
+
+        .version-label:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
 
         .header-controls {
@@ -1655,7 +1662,7 @@
                 <div class="logo">
                     <img src="icon.svg" alt="Overpass Status" class="logo-icon">
                     <span>Overpass Status</span>
-                    <span class="version-label" id="versionLabel"></span>
+                    <a href="https://github.com/skeffling/overpass-status" target="_blank" rel="noopener" class="version-label" id="versionLabel" title="View on GitHub"></a>
                 </div>
             </div>
             <div class="header-controls">
