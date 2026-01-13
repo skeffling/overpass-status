@@ -3719,7 +3719,7 @@ out count;`;
                         <div class="server-actions">
                             <span class="server-last-updated">${formatRelativeTime(state.serverLastUpdated[url])}</span>
                             <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
-                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                            ${allowCustomServers ? `<button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>` : ''}
                         </div>
                     `;
                 } else {
@@ -3732,7 +3732,7 @@ out count;`;
                             <div class="server-actions">
                                 <span class="server-last-updated">${formatRelativeTime(state.serverLastUpdated[url])}</span>
                                 <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
-                                <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                                ${allowCustomServers ? `<button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>` : ''}
                             </div>
                         </div>
                         <div class="server-error">${status.error || 'Connection failed'}</div>
@@ -3781,7 +3781,7 @@ out count;`;
                     <div class="server-actions">
                         <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
                         <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
-                        <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                        ${allowCustomServers ? `<button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>` : ''}
                     </div>
                 `;
             } else {
@@ -3794,7 +3794,7 @@ out count;`;
                         <div class="server-actions">
                             <span class="server-last-updated" title="${state.serverLastUpdated[url] ? state.serverLastUpdated[url].toLocaleString() : ''}">${formatRelativeTime(state.serverLastUpdated[url])}</span>
                             <button class="btn btn-icon btn-secondary" onclick="showServerLogs('${url}')" title="View logs">&#128220;</button>
-                            <button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>
+                            ${allowCustomServers ? `<button class="btn btn-icon btn-secondary btn-danger" onclick="removeServer('${url}')" title="Remove">&#10005;</button>` : ''}
                         </div>
                     </div>
                     <div class="card-metrics">
