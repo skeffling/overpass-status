@@ -804,19 +804,6 @@
             color: var(--status-error);
         }
 
-        @media (max-width: 768px) {
-            .server-row {
-                flex-wrap: wrap;
-            }
-            .server-metrics {
-                width: 100%;
-                margin-top: var(--spacing-sm);
-            }
-            .card-metrics {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
         /* ========== Add Server Modal ========== */
         .modal-overlay {
             position: fixed;
@@ -1591,6 +1578,52 @@
             /* Hide button text on mobile */
             .btn-text {
                 display: none;
+            }
+
+            /* Table view improvements for mobile */
+            .server-row {
+                flex-wrap: wrap;
+                padding: var(--spacing-sm);
+                gap: var(--spacing-sm);
+            }
+
+            .server-row-header {
+                display: none;
+            }
+
+            .server-name-col {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .server-row .server-metrics {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-xs);
+                margin-top: var(--spacing-xs);
+            }
+
+            .server-row .server-actions {
+                position: absolute;
+                right: var(--spacing-sm);
+                top: var(--spacing-sm);
+            }
+
+            .server-row {
+                position: relative;
+            }
+
+            .server-row .metric {
+                min-width: 0;
+            }
+
+            .server-row .metric-label {
+                font-size: 0.6rem;
+            }
+
+            .server-row .metric-value {
+                font-size: 0.8rem;
             }
         }
 
