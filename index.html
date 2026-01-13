@@ -399,6 +399,79 @@
             border-color: var(--accent-primary);
         }
 
+        /* Icon Toggle Buttons */
+        .toggle-btn-group {
+            display: inline-flex;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 28px;
+            padding: 0;
+            background: var(--bg-secondary);
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .toggle-btn:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .toggle-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .toggle-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 28px;
+            padding: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .icon-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .icon-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
         .columns-dropdown {
             position: relative;
             display: inline-block;
@@ -1343,6 +1416,38 @@
             text-decoration: underline;
         }
 
+        .log-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-xs);
+        }
+
+        .log-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .log-copy-btn:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
+
+        .log-copy-btn.copied {
+            color: var(--status-ok);
+            border-color: var(--status-ok);
+        }
+
         .log-empty {
             padding: var(--spacing-xl);
             text-align: center;
@@ -1444,6 +1549,37 @@
             .preset-buttons {
                 grid-template-columns: 1fr;
             }
+
+            /* Hide Servers title on mobile */
+            #serversTitle {
+                display: none;
+            }
+
+            .section-header {
+                justify-content: center;
+            }
+
+            .section-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            /* Narrower metric cells on mobile */
+            .metric {
+                padding: var(--spacing-xs);
+            }
+
+            .metric-label {
+                font-size: 0.65rem;
+            }
+
+            .metric-value {
+                font-size: 0.85rem;
+            }
+
+            .card-metrics {
+                gap: var(--spacing-xs);
+            }
         }
 
         /* ========== Animations ========== */
@@ -1541,14 +1677,17 @@
             <div class="section-header" id="serversHeader">
                 <h2 class="section-title" id="serversTitle">Servers</h2>
                 <div class="section-actions">
-                    <select class="refresh-select" id="layoutSelect" title="Layout style">
-                        <option value="card">Layout: Card</option>
-                        <option value="table">Layout: Table</option>
-                    </select>
-                    <select class="refresh-select" id="graphsSelect" title="Show latency graphs">
-                        <option value="off">Graphs: Off</option>
-                        <option value="on">Graphs: On</option>
-                    </select>
+                    <div class="toggle-btn-group" id="layoutToggle" title="Layout style">
+                        <button class="toggle-btn active" data-layout="card" title="Card view">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                        </button>
+                        <button class="toggle-btn" data-layout="table" title="Table view">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <button class="icon-btn" id="graphsToggle" title="Toggle graphs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </button>
                     <div class="columns-dropdown" id="columnsDropdown">
                         <button class="refresh-select columns-btn" id="columnsBtn">Columns ▾</button>
                         <div class="columns-menu" id="columnsMenu">
@@ -1717,21 +1856,21 @@
             <h3 class="modal-title">Add Server</h3>
 
             <div class="modal-section">
+                <div class="modal-section-title">Custom Server</div>
+                <div class="custom-server-inputs">
+                    <input type="text" id="customServerName" placeholder="Display name (e.g., My Server)">
+                    <input type="text" id="customServerUrl" placeholder="https://your-overpass-server.com">
+                    <button class="btn btn-primary" id="addCustomServerBtn">Add</button>
+                </div>
+            </div>
+
+            <div class="modal-section">
                 <div class="modal-section-header">
                     <div class="modal-section-title">Public APIs</div>
                     <button class="btn btn-secondary" id="addAllServersBtn">Add All</button>
                 </div>
                 <div class="preset-buttons" id="presetButtons">
                     <!-- Preset buttons will be inserted here -->
-                </div>
-            </div>
-
-            <div class="modal-section">
-                <div class="modal-section-title">Custom Server</div>
-                <div class="custom-server-inputs">
-                    <input type="text" id="customServerName" placeholder="Display name (e.g., My Server)">
-                    <input type="text" id="customServerUrl" placeholder="https://your-overpass-server.com">
-                    <button class="btn btn-primary" id="addCustomServerBtn">Add</button>
                 </div>
             </div>
 
@@ -1859,8 +1998,8 @@
             refreshAllBtn: document.getElementById('refreshAllBtn'),
             autoRefreshSelect: document.getElementById('autoRefreshSelect'),
             serverSortSelect: document.getElementById('serverSortSelect'),
-            layoutSelect: document.getElementById('layoutSelect'),
-            graphsSelect: document.getElementById('graphsSelect'),
+            layoutToggle: document.getElementById('layoutToggle'),
+            graphsToggle: document.getElementById('graphsToggle'),
             columnsDropdown: document.getElementById('columnsDropdown'),
             columnsBtn: document.getElementById('columnsBtn'),
             columnsMenu: document.getElementById('columnsMenu'),
@@ -2728,6 +2867,7 @@
             filteredLogs.forEach((log, index) => {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
+                entry.dataset.index = index;
                 entry.innerHTML = `
                     <div class="log-entry-header">
                         <span class="log-timestamp">${formatTimestamp(log.timestamp)}</span>
@@ -2737,11 +2877,23 @@
                         ${log.latency ? `<span class="log-latency">${log.latency}ms</span>` : ''}
                     </div>
                     ${log.requestBody ? `
-                        <div class="log-toggle" onclick="toggleLogDetails(this, 'request')">Show request</div>
+                        <div class="log-actions">
+                            <span class="log-toggle" onclick="toggleLogDetails(this.parentElement, 'request')">Show request</span>
+                            <button class="log-copy-btn" onclick="copyLogContent(this, 'request', ${index})" title="Copy request">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copy
+                            </button>
+                        </div>
                         <div class="log-details request" style="display: none;">${truncateText(log.requestBody)}</div>
                     ` : ''}
                     ${log.responseBody ? `
-                        <div class="log-toggle" onclick="toggleLogDetails(this, 'response')">Show response</div>
+                        <div class="log-actions">
+                            <span class="log-toggle" onclick="toggleLogDetails(this.parentElement, 'response')">Show response</span>
+                            <button class="log-copy-btn" onclick="copyLogContent(this, 'response', ${index})" title="Copy response">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copy
+                            </button>
+                        </div>
                         <div class="log-details response" style="display: none;">${truncateText(log.responseBody)}</div>
                     ` : ''}
                     ${log.error ? `
@@ -2752,11 +2904,35 @@
             });
         }
 
-        function toggleLogDetails(toggleEl, type) {
-            const detailsEl = toggleEl.nextElementSibling;
+        function toggleLogDetails(actionsEl, type) {
+            const detailsEl = actionsEl.nextElementSibling;
+            const toggleEl = actionsEl.querySelector('.log-toggle');
             const isHidden = detailsEl.style.display === 'none';
             detailsEl.style.display = isHidden ? 'block' : 'none';
             toggleEl.textContent = isHidden ? `Hide ${type}` : `Show ${type}`;
+        }
+
+        function copyLogContent(btn, type, logIndex) {
+            // Get the filtered logs to match the displayed index
+            const filteredLogs = state.logFilter
+                ? state.logs.filter(log => log.url.includes(state.logFilter.replace(/^https?:\/\//, '')))
+                : state.logs;
+
+            const log = filteredLogs[logIndex];
+            if (!log) return;
+
+            const content = type === 'request' ? log.requestBody : log.responseBody;
+            if (!content) return;
+
+            navigator.clipboard.writeText(content).then(() => {
+                btn.classList.add('copied');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied`;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = originalHTML;
+                }, 1500);
+            });
         }
 
         // ========== Theme ==========
@@ -3843,15 +4019,23 @@ out count;`;
                 renderServers();
             });
 
-            elements.layoutSelect.addEventListener('change', (e) => {
-                state.serverLayout = e.target.value;
+            elements.layoutToggle.addEventListener('click', (e) => {
+                const btn = e.target.closest('.toggle-btn');
+                if (!btn) return;
+                const layout = btn.dataset.layout;
+                if (layout === state.serverLayout) return;
+
+                elements.layoutToggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.serverLayout = layout;
                 saveState();
                 renderServers();
                 applyCompactMode();
             });
 
-            elements.graphsSelect.addEventListener('change', (e) => {
-                state.showGraphs = e.target.value === 'on';
+            elements.graphsToggle.addEventListener('click', () => {
+                state.showGraphs = !state.showGraphs;
+                elements.graphsToggle.classList.toggle('active', state.showGraphs);
                 saveState();
                 renderServers();
             });
@@ -4126,8 +4310,14 @@ out count;`;
             // Set dropdowns to saved values
             elements.autoRefreshSelect.value = state.autoRefreshInterval;
             elements.serverSortSelect.value = state.serverSortOrder;
-            elements.layoutSelect.value = state.serverLayout;
-            elements.graphsSelect.value = state.showGraphs ? 'on' : 'off';
+
+            // Set layout toggle active state
+            elements.layoutToggle.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.layout === state.serverLayout);
+            });
+
+            // Set graphs toggle active state
+            elements.graphsToggle.classList.toggle('active', state.showGraphs);
 
             // Set column checkboxes to saved values
             elements.columnsMenu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
