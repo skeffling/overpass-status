@@ -48,7 +48,9 @@ If you host your own instance, you can configure defaults by creating a `config.
     { "name": "Backup", "url": "https://overpass2.example.com" }
   ],
   "minRefresh": 180,
-  "allowCustomServers": true
+  "allowCustomServers": true,
+  "showHelp": true,
+  "showAbout": true
 }
 ```
 
@@ -59,8 +61,12 @@ Copy `config.example.json` to `config.json` and edit as needed.
 | `servers` | Default servers for new visitors |
 | `minRefresh` | Minimum refresh interval in seconds (e.g., 180 = 3 min) |
 | `allowCustomServers` | Set to `false` to prevent users adding their own servers |
+| `showHelp` | Set to `false` to hide the help link |
+| `showAbout` | Set to `false` to hide the about button |
 
-Default servers only apply to new visitors. The `minRefresh` and `allowCustomServers` restrictions apply to all users and are displayed in the About modal.
+Default servers only apply to new visitors. The `minRefresh` and `allowCustomServers` restrictions apply to all users.
+
+**Simple status page:** To create a minimal status-only page for your Overpass server, set `allowCustomServers`, `showHelp`, and `showAbout` all to `false`. This hides navigation and editing options, showing only server status.
 
 ## Documentation
 
