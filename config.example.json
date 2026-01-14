@@ -5,19 +5,22 @@
 
   "servers": [
     { "name": "Main", "url": "https://overpass-api.de" },
-    { "name": "Z", "url": "https://z.overpass-api.de" }
+    { "name": "Z", "url": "https://z.overpass-api.de" },
+    { "name": "Cached", "url": "https://cached.example.com", "cacheBusting": true }
   ],
 
-  "_comment4": "minRefresh: minimum refresh interval in seconds (0, 60, 120, 180, 300, 600, 1800, 3600)",
-  "_comment5": "Set this to limit load on your servers - users cannot select faster intervals",
+  "_comment4": "Per-server option: cacheBusting - set to true if the server has HTTP caching (e.g., nginx proxy)",
+
+  "_comment5": "minRefresh: minimum refresh interval in seconds (0, 60, 120, 180, 300, 600, 1800, 3600)",
+  "_comment6": "Set this to limit load on your servers - users cannot select faster intervals",
   "minRefresh": 180,
 
-  "_comment6": "allowCustomServers: set to false to prevent users from adding their own servers",
-  "_comment7": "When false, users can only monitor the servers you define above",
+  "_comment7": "allowCustomServers: set to false to prevent users from adding their own servers",
+  "_comment8": "When false, users can only monitor the servers you define above",
   "allowCustomServers": true,
 
-  "_comment8": "UI visibility options - set to false to hide these elements",
-  "_comment9": "Useful for creating a simple status-only page for your Overpass server",
+  "_comment9": "UI visibility options - set to false to hide these elements",
+  "_comment10": "Useful for creating a simple status-only page for your Overpass server",
   "showHelp": true,
   "showAbout": true
 }

@@ -479,6 +479,32 @@
             height: 16px;
         }
 
+        /* Cache Indicator */
+        .cache-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            background: var(--status-warning);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 4px;
+            vertical-align: middle;
+            transition: background var(--transition-fast);
+        }
+
+        .cache-indicator:hover {
+            opacity: 0.8;
+        }
+
+        .cache-indicator.mitigated {
+            background: var(--status-ok);
+        }
+
         .columns-dropdown {
             position: relative;
             display: inline-block;
@@ -1938,9 +1964,42 @@
         </div>
     </div>
 
+    <!-- Cache Detected Modal -->
+    <div class="modal-overlay" id="cacheDetectedModal">
+        <div class="modal">
+            <h3 class="modal-title">HTTP Cache Detected</h3>
+            <p id="cacheDetectedMessage"></p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem;">
+                This server appears to have HTTP caching (e.g., nginx proxy cache) in front of it.
+                The cached response returns stale data age, but the actual Overpass data is more up-to-date.
+            </p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Would you like to enable cache-busting for more accurate readings?
+                This uses randomized queries to bypass the cache.
+            </p>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cacheDismissBtn">No, keep as is</button>
+                <button class="btn btn-primary" id="cacheEnableBtn">Yes, enable cache-busting</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cache Info Modal -->
+    <div class="modal-overlay" id="cacheInfoModal">
+        <div class="modal">
+            <h3 class="modal-title">Cache Status</h3>
+            <p id="cacheInfoServer" style="font-weight: 600; margin-bottom: 1rem;"></p>
+            <div id="cacheInfoContent"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeCacheInfoBtn">Close</button>
+                <button class="btn btn-primary" id="toggleCacheBustingBtn"></button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ========== Version ==========
-        const VERSION = '1.7.0';
+        const VERSION = '1.8.0';
 
         // ========== Configuration ==========
         const CONFIG = {
@@ -1991,9 +2050,16 @@
             serverEndpoints: {}, // Set of seen endpoints per server
             serverVersion: {}, // Overpass version info per server
             serverVersionChangedAt: {}, // When each server's version last changed
+            serverCacheDetected: {}, // { serverUrl: true/false } - cache detected per server
+            serverLastTimestamp: {}, // { serverUrl: 'ISO timestamp' } - for cache comparison
+            serverTimestampStaleCount: {}, // { serverUrl: count } - consecutive identical timestamps
+            useCacheBusting: {}, // { serverUrl: true/false } - user preference per server
             logs: [],
             logFilter: null // null = show all, or serverUrl to filter
         };
+
+        let currentCacheServer = null; // Server URL for cache detected modal
+        let currentCacheInfoServer = null; // Server URL for cache info modal
 
         let autoRefreshTimer = null;
         let slotCountdownTimer = null;
@@ -2100,7 +2166,16 @@
             graphPopupMin: document.getElementById('graphPopupMin'),
             graphPopupSvg: document.getElementById('graphPopupSvg'),
             graphPopupTimeOldest: document.getElementById('graphPopupTimeOldest'),
-            graphPopupTimeNewest: document.getElementById('graphPopupTimeNewest')
+            graphPopupTimeNewest: document.getElementById('graphPopupTimeNewest'),
+            cacheDetectedModal: document.getElementById('cacheDetectedModal'),
+            cacheDetectedMessage: document.getElementById('cacheDetectedMessage'),
+            cacheDismissBtn: document.getElementById('cacheDismissBtn'),
+            cacheEnableBtn: document.getElementById('cacheEnableBtn'),
+            cacheInfoModal: document.getElementById('cacheInfoModal'),
+            cacheInfoServer: document.getElementById('cacheInfoServer'),
+            cacheInfoContent: document.getElementById('cacheInfoContent'),
+            closeCacheInfoBtn: document.getElementById('closeCacheInfoBtn'),
+            toggleCacheBustingBtn: document.getElementById('toggleCacheBustingBtn')
         };
 
         // ========== Storage ==========
@@ -2114,7 +2189,9 @@
                 serverSortOrder: state.serverSortOrder,
                 serverLayout: state.serverLayout,
                 showGraphs: state.showGraphs,
-                visibleColumns: state.visibleColumns
+                visibleColumns: state.visibleColumns,
+                serverCacheDetected: state.serverCacheDetected,
+                useCacheBusting: state.useCacheBusting
             }));
         }
 
@@ -2178,6 +2255,12 @@
                     state.showGraphs = data.showGraphs ?? false;
                     if (data.visibleColumns) {
                         state.visibleColumns = { ...state.visibleColumns, ...data.visibleColumns };
+                    }
+                    if (data.serverCacheDetected) {
+                        state.serverCacheDetected = data.serverCacheDetected;
+                    }
+                    if (data.useCacheBusting) {
+                        state.useCacheBusting = data.useCacheBusting;
                     }
                 }
             } catch (e) {
@@ -3089,14 +3172,17 @@
         // Simple query to get version and data age info
         async function fetchServerMetadata(serverUrl) {
             const url = `${serverUrl}/api/interpreter`;
-            // Minimal query - just returns metadata without querying actual data
-            const query = '[out:json][timeout:5];node(1);out meta;';
+            // Use random node ID if cache busting is enabled for this server
+            const nodeId = state.useCacheBusting[serverUrl]
+                ? Math.floor(Math.random() * 1000000) + 1000000
+                : 1;
+            const query = `[out:json][timeout:5];node(${nodeId});out meta;`;
 
             const displayServerUrl = serverUrl.replace(/^https?:\/\//, '');
             const logEntry = {
                 timestamp: new Date(),
                 method: 'POST',
-                url: `${displayServerUrl} - metadata check`,
+                url: `${displayServerUrl} - metadata check${state.useCacheBusting[serverUrl] ? ' (cache-bust)' : ''}`,
                 requestBody: query
             };
 
@@ -3126,8 +3212,26 @@
 
                 // Extract metadata
                 if (data.osm3s?.timestamp_osm_base) {
-                    state.serverDataAge[serverUrl] = data.osm3s.timestamp_osm_base;
-                    trackDataAge(serverUrl, data.osm3s.timestamp_osm_base);
+                    const newTimestamp = data.osm3s.timestamp_osm_base;
+
+                    // Track consecutive identical timestamps for cache detection
+                    if (!state.useCacheBusting[serverUrl] && !state.serverCacheDetected[serverUrl]) {
+                        if (state.serverLastTimestamp[serverUrl] === newTimestamp) {
+                            state.serverTimestampStaleCount[serverUrl] =
+                                (state.serverTimestampStaleCount[serverUrl] || 0) + 1;
+
+                            // After 2 identical timestamps, check for cache
+                            if (state.serverTimestampStaleCount[serverUrl] >= 2) {
+                                detectCache(serverUrl);
+                            }
+                        } else {
+                            state.serverTimestampStaleCount[serverUrl] = 0;
+                        }
+                    }
+
+                    state.serverLastTimestamp[serverUrl] = newTimestamp;
+                    state.serverDataAge[serverUrl] = newTimestamp;
+                    trackDataAge(serverUrl, newTimestamp);
                 }
                 if (data.generator) {
                     updateServerVersion(serverUrl, data.generator);
@@ -3136,6 +3240,87 @@
                 logEntry.error = error.message;
                 addLog(logEntry);
             }
+        }
+
+        // Detect if a server has HTTP caching by comparing normal vs cache-busted responses
+        async function detectCache(serverUrl) {
+            const cachedTimestamp = state.serverLastTimestamp[serverUrl];
+
+            // Do a cache-busting lookup with random node ID
+            const randomNodeId = Math.floor(Math.random() * 1000000) + 1000000;
+            const query = `[out:json][timeout:5];node(${randomNodeId});out meta;`;
+
+            try {
+                const response = await fetch(`${serverUrl}/api/interpreter`, {
+                    method: 'POST',
+                    body: `data=${encodeURIComponent(query)}`,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+
+                if (!response.ok) return;
+
+                const data = JSON.parse(await response.text());
+                const freshTimestamp = data.osm3s?.timestamp_osm_base;
+
+                // Compare with cached timestamp
+                if (freshTimestamp && freshTimestamp !== cachedTimestamp) {
+                    state.serverCacheDetected[serverUrl] = true;
+                    saveState();
+                    showCacheDetectedModal(serverUrl, cachedTimestamp, freshTimestamp);
+                }
+            } catch (error) {
+                // Cache detection failed, silently ignore
+            }
+        }
+
+        function showCacheDetectedModal(serverUrl, cachedTimestamp, freshTimestamp) {
+            currentCacheServer = serverUrl;
+            const displayUrl = serverUrl.replace(/^https?:\/\//, '');
+
+            const cachedAge = formatDataAge(cachedTimestamp);
+            const freshAge = formatDataAge(freshTimestamp);
+
+            elements.cacheDetectedMessage.innerHTML = `
+                <strong>${displayUrl}</strong> appears to have HTTP caching enabled.
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; margin-top: 1rem; font-size: 0.85rem;">
+                    <div style="margin-bottom: 0.5rem;"><strong>Our test queries:</strong></div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <div style="color: var(--text-muted); margin-bottom: 0.25rem;">Standard query <code style="font-size: 0.8rem;">node(1)</code></div>
+                            <div style="color: var(--status-warning);">→ ${cachedAge?.text || cachedTimestamp || 'Unknown'} <span style="opacity: 0.7;">(cached)</span></div>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <div style="color: var(--text-muted); margin-bottom: 0.25rem;">Random query <code style="font-size: 0.8rem;">node(random)</code></div>
+                            <div style="color: var(--status-ok);">→ ${freshAge?.text || freshTimestamp || 'Unknown'} <span style="opacity: 0.7;">(fresh)</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            elements.cacheDetectedModal.classList.add('active');
+        }
+
+        function showCacheInfoModal(serverUrl) {
+            currentCacheInfoServer = serverUrl;
+            const displayUrl = serverUrl.replace(/^https?:\/\//, '');
+            const isMitigated = state.useCacheBusting[serverUrl];
+
+            elements.cacheInfoServer.textContent = displayUrl;
+            elements.cacheInfoContent.innerHTML = `
+                <p>This server has HTTP caching detected. The data age shown may not reflect
+                   the actual freshness of the Overpass data.</p>
+                <p><strong>Status:</strong> ${isMitigated
+                    ? '<span style="color: var(--status-ok);">Cache-busting enabled</span> - showing real data age'
+                    : '<span style="color: var(--status-warning);">Cache not mitigated</span> - data age may appear stale'}</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    Cache-busting uses randomized queries to bypass HTTP caching and get fresh timestamps.
+                </p>
+            `;
+            elements.toggleCacheBustingBtn.textContent = isMitigated
+                ? 'Disable cache-busting'
+                : 'Enable cache-busting';
+
+            elements.cacheInfoModal.classList.add('active');
         }
 
         function parseStatus(text, latency) {
@@ -3757,7 +3942,7 @@ out count;`;
                 if (isCompact) {
                     el.innerHTML = `
                         <div class="server-name-col">
-                            <div class="server-name">${serverName}</div>
+                            <div class="server-name">${serverName}${state.serverCacheDetected[url] ? `<span class="cache-indicator ${state.useCacheBusting[url] ? 'mitigated' : ''}" onclick="showCacheInfoModal('${url}')" title="HTTP cache detected - click for details">C</span>` : ''}</div>
                             <div class="server-hostname">${displayUrl}</div>
                         </div>
                         <div class="server-error-msg">${status.error || 'Connection failed'}</div>
@@ -3771,7 +3956,7 @@ out count;`;
                     el.innerHTML = `
                         <div class="server-card-header">
                             <div class="server-url" title="${displayUrl}">
-                                <span class="server-name">${serverName}</span>
+                                <span class="server-name">${serverName}${state.serverCacheDetected[url] ? `<span class="cache-indicator ${state.useCacheBusting[url] ? 'mitigated' : ''}" onclick="showCacheInfoModal('${url}')" title="HTTP cache detected - click for details">C</span>` : ''}</span>
                                 <span class="server-hostname">${displayUrl}</span>
                             </div>
                             <div class="server-actions">
@@ -3791,7 +3976,7 @@ out count;`;
                 const cols = state.visibleColumns;
                 el.innerHTML = `
                     <div class="server-name-col">
-                        <div class="server-name">${serverName}</div>
+                        <div class="server-name">${serverName}${state.serverCacheDetected[url] ? `<span class="cache-indicator ${state.useCacheBusting[url] ? 'mitigated' : ''}" onclick="showCacheInfoModal('${url}')" title="HTTP cache detected - click for details">C</span>` : ''}</div>
                         <div class="server-hostname">${displayUrl}</div>
                     </div>
                     <div class="server-metrics">
@@ -3833,7 +4018,7 @@ out count;`;
                 el.innerHTML = `
                     <div class="server-card-header">
                         <div class="server-url" title="${displayUrl}">
-                            <span class="server-name">${serverName}</span>
+                            <span class="server-name">${serverName}${state.serverCacheDetected[url] ? `<span class="cache-indicator ${state.useCacheBusting[url] ? 'mitigated' : ''}" onclick="showCacheInfoModal('${url}')" title="HTTP cache detected - click for details">C</span>` : ''}</span>
                             <span class="server-hostname">${displayUrl}${showEndpoint ? ` <span class="server-endpoint" ${endpointCount > 1 ? `title="Click to see all ${endpointCount} detected endpoints" onclick="showEndpointsModal('${url}')" style="cursor: pointer;"` : `title="Backend server handling this request"`}>→ ${endpoint}${endpointCount > 1 ? ' <span class="endpoint-warning" title="Multiple backends detected - click to add individually">&#9888;</span>' : ''}</span>` : ''}</span>
                         </div>
                         <div class="server-actions">
@@ -4163,6 +4348,45 @@ out count;`;
                 }
             });
 
+            // Cache modal event handlers
+            elements.cacheEnableBtn.addEventListener('click', () => {
+                state.useCacheBusting[currentCacheServer] = true;
+                saveState();
+                elements.cacheDetectedModal.classList.remove('active');
+                renderServers();
+                fetchServerMetadata(currentCacheServer);
+            });
+
+            elements.cacheDismissBtn.addEventListener('click', () => {
+                elements.cacheDetectedModal.classList.remove('active');
+            });
+
+            elements.cacheDetectedModal.addEventListener('click', (e) => {
+                if (e.target === elements.cacheDetectedModal) {
+                    elements.cacheDetectedModal.classList.remove('active');
+                }
+            });
+
+            elements.toggleCacheBustingBtn.addEventListener('click', () => {
+                state.useCacheBusting[currentCacheInfoServer] = !state.useCacheBusting[currentCacheInfoServer];
+                saveState();
+                elements.cacheInfoModal.classList.remove('active');
+                renderServers();
+                if (state.useCacheBusting[currentCacheInfoServer]) {
+                    fetchServerMetadata(currentCacheInfoServer);
+                }
+            });
+
+            elements.closeCacheInfoBtn.addEventListener('click', () => {
+                elements.cacheInfoModal.classList.remove('active');
+            });
+
+            elements.cacheInfoModal.addEventListener('click', (e) => {
+                if (e.target === elements.cacheInfoModal) {
+                    elements.cacheInfoModal.classList.remove('active');
+                }
+            });
+
             elements.addCustomServerBtn.addEventListener('click', () => {
                 const url = elements.customServerUrl.value.trim();
                 const name = elements.customServerName.value.trim();
@@ -4273,6 +4497,15 @@ out count;`;
                 if (state.servers.length === 0 && !params.has('servers')) {
                     if (config.servers && Array.isArray(config.servers) && config.servers.length > 0) {
                         state.servers = config.servers.filter(s => s.url && s.name);
+
+                        // Apply cacheBusting setting from config for each server
+                        config.servers.forEach(server => {
+                            if (server.url && server.cacheBusting === true) {
+                                state.useCacheBusting[server.url] = true;
+                                state.serverCacheDetected[server.url] = true; // Mark as known cached server
+                            }
+                        });
+
                         saveState();
                     }
                 }
@@ -4376,6 +4609,15 @@ out count;`;
 
             loadState();
             loadHistory();
+
+            // Clear cache detection for servers where user hasn't made a choice yet
+            // This allows re-detection if the modal was missed (e.g., due to previous bugs)
+            for (const serverUrl in state.serverCacheDetected) {
+                if (state.serverCacheDetected[serverUrl] && state.useCacheBusting[serverUrl] === undefined) {
+                    delete state.serverCacheDetected[serverUrl];
+                }
+            }
+
             await loadServerConfig(); // Load server config if no saved servers
             applyUrlParams(); // URL params override saved state
             applyTheme();
