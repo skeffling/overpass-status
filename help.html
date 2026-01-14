@@ -364,6 +364,7 @@
                     <div class="nav-section-title">Features</div>
                     <a href="#graphs" class="nav-link">Sparkline Graphs</a>
                     <a href="#load-balancing" class="nav-link">Load Balancing</a>
+                    <a href="#http-cache" class="nav-link">HTTP Cache Detection</a>
                     <a href="#landmarks" class="nav-link">Landmark Tests</a>
                     <a href="#ordering" class="nav-link">Custom Ordering</a>
                     <a href="#sharing" class="nav-link">Sharing Config</a>
@@ -515,6 +516,77 @@
                 If no endpoint is shown, the server may still be load balanced — you might notice this through fluctuating data age values.
             </div>
 
+            <h2 id="http-cache">HTTP Cache Detection</h2>
+            <p>Some Overpass servers have HTTP caching (e.g., nginx proxy cache) in front of them. This can cause the <strong>Data Age</strong> metric to appear stuck or stale, even when the actual Overpass data is fresh.</p>
+
+            <h3>The problem</h3>
+            <p>When an HTTP cache sits in front of an Overpass server, repeated queries for the same data return cached responses. Since the monitor normally queries <code>node(1)</code> to check server metadata, a cache may return the same <code>timestamp_osm_base</code> value for hours or even days — making the data appear stale when the actual Overpass database is freshly updated.</p>
+
+            <h3>How we detect it</h3>
+            <p>The monitor uses a two-step detection process:</p>
+            <ol>
+                <li><strong>Track consecutive timestamps:</strong> After each refresh, the monitor compares the new <code>timestamp_osm_base</code> with the previous value. If the same timestamp appears twice in a row, it triggers a cache test.</li>
+                <li><strong>Cache-bust test:</strong> The monitor sends a second query using a random node ID (e.g., <code>node(1847293)</code> instead of <code>node(1)</code>). Since this query hasn't been cached, it bypasses the HTTP cache and returns the real timestamp.</li>
+                <li><strong>Compare results:</strong> If the cache-bust query returns a fresher timestamp than the normal query, HTTP caching is confirmed.</li>
+            </ol>
+
+            <h3>Example from testing</h3>
+            <p>Here's what we observed when testing a server with nginx proxy caching enabled:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Query</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Normal query</td>
+                        <td><code>[out:json];node(1);out meta;</code></td>
+                        <td><code>timestamp_osm_base: 2026-01-14T07:26:15Z</code></td>
+                    </tr>
+                    <tr>
+                        <td>2. Refresh (3 min later)</td>
+                        <td><code>[out:json];node(1);out meta;</code></td>
+                        <td><code>timestamp_osm_base: 2026-01-14T07:26:15Z</code> (same!)</td>
+                    </tr>
+                    <tr>
+                        <td>3. Cache-bust test</td>
+                        <td><code>[out:json];node(1019429);out meta;</code></td>
+                        <td><code>timestamp_osm_base: 2026-01-14T07:27:11Z</code> (fresher)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>The normal query returned the same timestamp twice because it hit the HTTP cache. The random node ID query bypassed the cache and revealed the actual data age — nearly a minute fresher.</p>
+
+            <h3>What cached responses look like</h3>
+            <p>Signs that a server may have HTTP caching:</p>
+            <ul>
+                <li><strong>Stuck data age:</strong> The timestamp doesn't change across multiple refreshes, even though other servers show updates</li>
+                <li><strong>Misleading staleness:</strong> Data age shows hours or days old when the server should have fresh data</li>
+                <li><strong>Sudden jumps:</strong> After cache expiry, the data age suddenly jumps to a much fresher value</li>
+            </ul>
+
+            <h3>Cache indicator</h3>
+            <p>When HTTP caching is detected on a server:</p>
+            <ul>
+                <li>A <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 0.6rem; font-weight: 700; background: var(--status-warning); color: white; border-radius: 50%;">C</span> badge appears next to the server name</li>
+                <li>Click the badge to see cache status and toggle cache-busting</li>
+                <li>When cache-busting is enabled, the badge turns <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 0.6rem; font-weight: 700; background: var(--status-ok); color: white; border-radius: 50%;">C</span> green</li>
+            </ul>
+
+            <h3>Cache-busting</h3>
+            <p>When you enable cache-busting for a server, the monitor uses randomized query node IDs instead of the standard <code>node(1)</code>. This bypasses the HTTP cache and returns fresh <code>timestamp_osm_base</code> values.</p>
+            <div class="note">
+                <div class="note-title">When to use cache-busting</div>
+                Cache-busting is useful when you need accurate data age readings. However, it slightly increases query variation. The setting is saved per-server and persists across page reloads.
+            </div>
+            <div class="note">
+                <div class="note-title">Pre-configuring cache-busting</div>
+                If you host your own instance and know a server has HTTP caching, you can pre-enable cache-busting in <code>config.json</code> by adding <code>"cacheBusting": true</code> to the server entry. See <a href="#server-config">Server Config File</a> for details.
+            </div>
+
             <h2 id="landmarks">Landmark Tests</h2>
             <p>Test server response by querying for famous landmarks around the world:</p>
             <ul>
@@ -628,6 +700,9 @@
             <table>
                 <tr><th>Option</th><th>Description</th></tr>
                 <tr><td><code>servers</code></td><td>Array of default servers for new visitors</td></tr>
+                <tr><td><code>servers[].name</code></td><td>Display name for the server</td></tr>
+                <tr><td><code>servers[].url</code></td><td>URL of the Overpass server</td></tr>
+                <tr><td><code>servers[].cacheBusting</code></td><td>Set to <code>true</code> if the server has HTTP caching (e.g., nginx proxy). Enables cache-busting queries automatically.</td></tr>
                 <tr><td><code>minRefresh</code></td><td>Minimum refresh interval in seconds (restricts dropdown options)</td></tr>
                 <tr><td><code>allowCustomServers</code></td><td>Set to <code>false</code> to prevent users from adding their own servers</td></tr>
                 <tr><td><code>showHelp</code></td><td>Set to <code>false</code> to hide the help link</td></tr>
@@ -641,7 +716,7 @@
             <pre><code>{
   "servers": [
     { "name": "My Server", "url": "https://overpass.example.com" },
-    { "name": "Backup", "url": "https://overpass2.example.com" }
+    { "name": "Cached Server", "url": "https://overpass2.example.com", "cacheBusting": true }
   ],
   "minRefresh": 180,
   "allowCustomServers": false,

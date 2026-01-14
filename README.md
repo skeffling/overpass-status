@@ -14,6 +14,7 @@ I built this while setting up my own Overpass servers. Once they were running, I
 - **Real-time monitoring** — Latency, query slots, active queries, data age, and version
 - **Live sparkline graphs** — Visualize latency and activity trends over time
 - **Persistent history** — Graphs and data persist across page reloads
+- **HTTP cache detection** — Automatically detects servers with proxy caching that may show stale data age
 - **Customizable columns** — Show/hide metrics to focus on what matters
 - **Shareable config** — Share your setup via URL parameters
 - **Drag-and-drop ordering** — Arrange servers in custom order
@@ -45,7 +46,7 @@ If you host your own instance, you can configure defaults by creating a `config.
 {
   "servers": [
     { "name": "My Server", "url": "https://overpass.example.com" },
-    { "name": "Backup", "url": "https://overpass2.example.com" }
+    { "name": "Cached Server", "url": "https://overpass2.example.com", "cacheBusting": true }
   ],
   "minRefresh": 180,
   "allowCustomServers": true,
@@ -58,7 +59,8 @@ Copy `config.example.json` to `config.json` and edit as needed.
 
 | Option | Description |
 |--------|-------------|
-| `servers` | Default servers for new visitors |
+| `servers` | Default servers for new visitors (array of `{name, url, cacheBusting?}`) |
+| `servers[].cacheBusting` | Set to `true` for servers with HTTP caching (e.g., nginx proxy) |
 | `minRefresh` | Minimum refresh interval in seconds (e.g., 180 = 3 min) |
 | `allowCustomServers` | Set to `false` to prevent users adding their own servers |
 | `showHelp` | Set to `false` to hide the help link |
