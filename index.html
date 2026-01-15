@@ -3935,7 +3935,9 @@ out count;`;
             const latencyStatus = getLatencyStatus(status.latency);
             const runningCount = status.runningQueries?.length || 0;
             const runningStatus = runningCount < 5 ? 'ok' : runningCount < 10 ? 'warning' : 'error';
-            const slotsStatus = status.slotsAvailable === null ? '' : status.slotsAvailable === 0 ? 'error' : status.slotsAvailable < status.slotsTotal ? 'warning' : 'ok';
+            // Slots color: green = <50% busy, orange = 50-75% busy, red = 75%+ busy
+            const slotsPercent = status.slotsTotal > 0 ? status.slotsAvailable / status.slotsTotal : null;
+            const slotsStatus = slotsPercent === null ? '' : slotsPercent > 0.5 ? 'ok' : slotsPercent >= 0.25 ? 'warning' : 'error';
             const dataAge = formatDataAge(state.serverDataAge[url]);
             const versionInfo = state.serverVersion[url];
 
