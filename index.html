@@ -1715,6 +1715,11 @@
                 <li><span style="color: #fbbf24;">&#9679; Orange</span> — Warning</li>
                 <li><span style="color: #f87171;">&#9679; Red</span> — Issue</li>
             </ul>
+            <p style="margin-top: var(--spacing-sm);">
+                <a href="https://github.com/skeffling/overpass-status" target="_blank" rel="noopener">View on GitHub</a>
+                &nbsp;·&nbsp;
+                <a href="https://ko-fi.com/pitstopper" target="_blank" rel="noopener">Buy me a coffee</a> if you find this useful!
+            </p>
             <p style="margin-top: var(--spacing-sm); font-size: 0.75rem; opacity: 0.7;">
                 This tool is not affiliated with OpenStreetMap or any Overpass API server operators.
             </p>
@@ -3831,6 +3836,11 @@ out count;`;
                 return;
             }
 
+            // Single-server mode: hide sort dropdown and title (no need for sorting/labeling)
+            const isSingleServer = state.servers.length === 1;
+            elements.serverSortSelect.style.display = isSingleServer ? 'none' : '';
+            elements.serversTitle.style.display = isSingleServer ? 'none' : '';
+
             const isCompact = state.serverLayout === 'table';
             elements.serversGrid.style.display = isCompact ? 'flex' : 'grid';
             elements.serversGrid.classList.toggle('compact-view', isCompact);
@@ -3867,6 +3877,7 @@ out count;`;
 
         function applyCompactMode() {
             const isCompact = state.serverLayout === 'table';
+            const isSingleServer = state.servers.length === 1;
 
             // Hide/show sections
             elements.mainHeader.style.display = isCompact ? 'none' : '';
@@ -3874,10 +3885,14 @@ out count;`;
             elements.logSection.style.display = isCompact ? 'none' : '';
             elements.introBox.style.display = isCompact ? 'none' : '';
 
-            // Update servers title
-            if (isCompact) {
+            // Update servers title (hidden in single-server mode)
+            if (isSingleServer) {
+                elements.serversTitle.style.display = 'none';
+            } else if (isCompact) {
+                elements.serversTitle.style.display = '';
                 elements.serversTitle.innerHTML = `<img src="icon.svg" alt="" class="logo-icon" style="width:20px;height:20px;vertical-align:middle;margin-right:4px;">Overpass Status <span class="version-label">v${VERSION}</span>`;
             } else {
+                elements.serversTitle.style.display = '';
                 elements.serversTitle.textContent = 'Servers';
             }
         }
@@ -3896,8 +3911,8 @@ out count;`;
             // Set base class based on layout
             el.className = isCompact ? 'server-row fade-in' : 'server-card fade-in';
 
-            // Enable drag-and-drop for custom sort order
-            if (state.serverSortOrder === 'custom') {
+            // Enable drag-and-drop for custom sort order (only if more than 1 server)
+            if (state.serverSortOrder === 'custom' && state.servers.length > 1) {
                 el.draggable = true;
                 el.classList.add('draggable');
                 el.ondragstart = handleDragStart;
